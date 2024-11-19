@@ -14,13 +14,11 @@ module regfile (
             for (integer i = 0; i < 32; i++) begin
                 register[i] <= '0;
             end
-            //$writememh("regfile.data", register);
         end else if (rd_wren && rd_addr) register[rd_addr] <= rd_data;
-        //$writememh("regfile.data", register);
     end
 
 // Read operation
-    assign rs1_data = register[rs1_addr];
-    assign rs2_data = register[rs2_addr];
+    assign rs1_data = (rd_addr == rs1_addr) ? rd_data : register[rs1_addr];
+    assign rs2_data = (rd_addr == rs2_addr) ? rd_data : register[rs2_addr];
 
 endmodule
