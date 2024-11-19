@@ -1,9 +1,10 @@
 .PHONY: comp sim wave run
 
 TEST_NAME=application
+BENCH=bru
 
 comp:
-	iverilog -g2012 -s singlecycle_tb -o singlecycle_tb.vvp -c Filelist.f
+	iverilog -g2012 -s $(BENCH)_tb -o singlecycle_tb.vvp -c Filelist.f
 
 sim:
 	vvp singlecycle_tb.vvp
@@ -19,3 +20,6 @@ hex:
 	cp /home/datpham/CTMT/Milestone2/singlecycle/02_test/dump/mem_padded.dump /mnt/d/CTMT/MileStone2/singlecycle/02_test
 run:
 	make hex && make comp && make sim
+
+test:
+	make comp && make sim
