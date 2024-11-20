@@ -24,12 +24,11 @@ always @(*) begin
 	case (instr[6:0])
 		R_type      : begin
 					  if (!(func7 == 7'b0 || func7 == 7'b0100000)) begin
-						rd_wren = 1'b0; mem_wren = 1'b0; mem_rden = 1'b0; op_a_sel = 1'b0; op_b_sel = 2'b0; wb_sel = 1'b0;
+						rd_wren = 1'b0; mem_wren = 1'b0; mem_rden = 1'b0; op_a_sel = 1'b0; op_b_sel = 2'b0; alu_op = 4'b0000; wb_sel = 1'b0;
 					    is_br = 1'b0; is_uncbr = 2'b00; insn_vld = 1'b0;
 					  end else begin
 						rd_wren = 1'b1; mem_wren = 1'b0; mem_rden = 1'b0; op_a_sel = 1'b0; op_b_sel = 2'b0; wb_sel = 1'b0;
 					    is_br = 1'b0; is_uncbr = 2'b00; insn_vld = 1'b1;
-					  end
 						case (func3)
 							3'b000: alu_op = (!func7[5]) ? 4'b0000 : 4'b0001;
 							3'b001: alu_op = 4'b0111;
@@ -40,6 +39,7 @@ always @(*) begin
 							3'b110: alu_op = 4'b0101;
 							3'b111: alu_op = 4'b0110;
 						endcase
+					  end
 		end
 		I_type_IMM  : begin
 			          rd_wren = 1'b1; mem_wren = 1'b0; mem_rden = 1'b0; op_a_sel = 1'b0; op_b_sel = 2'b01; wb_sel = 1'b0;

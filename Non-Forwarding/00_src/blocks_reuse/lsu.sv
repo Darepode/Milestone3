@@ -1,8 +1,9 @@
 module lsu (
-    input             i_clk, i_rst_n, i_lsu_wren, i_l_unsigned,
-    input  [1:0]      i_s_length, 
-    input  [2:0]      i_l_length,
-    input  [31:0]     i_st_data, i_io_sw, i_io_btn, i_lsu_addr,
+    input             i_clk, i_rst_n, i_lsu_wren, //i_l_unsigned,
+    // input  [1:0]      i_s_length, 
+    // input  [2:0]      i_l_length,
+    input      [2:0]  i_func3,       
+    input      [31:0] i_st_data, i_io_sw, i_io_btn, i_lsu_addr,
     output reg [31:0] o_ld_data, o_io_lcd, o_io_ledg, o_io_ledr,
                        
     output reg [6:0]  o_io_hex0, o_io_hex1, o_io_hex2, o_io_hex3,
@@ -15,6 +16,15 @@ module lsu (
     wire [4:0]  input_mem_addr;
     wire [5:0]  output_mem_addr;
     wire [31:0] data_mem_out, output_mem_out, input_mem_out;
+
+    wire i_l_unsigned;
+    wire [1:0] i_s_length;
+    wire [2:0] i_l_length;
+
+    assign i_s_length   = func3[1:0];
+    assign i_l_length   = func3[1:0];
+    assign i_l_unsigned = func3[2];
+
 
     // Declare memory space
     reg [7:0] data_mem[0:8191];
@@ -64,20 +74,15 @@ module lsu (
 
     // Length select and sign extend
     always @(*) begin
-        if(i_l_unsigned) begin
-            case(i_l_length)
+            case({i_l_unsigned, i_l_length})
                 3'b100:  o_ld_data = {24'b0, ld_temp_data[7:0]};
                 3'b101:  o_ld_data = {16'b0, ld_temp_data[15:0]}; 
-                default: o_ld_data = 32'b1111000011110000; //for debugging
-            endcase
-        end else begin
-            case(i_l_length)
+
                 3'b000:  o_ld_data = {{24{ld_temp_data[7]}}, ld_temp_data[7:0]};
                 3'b001:  o_ld_data = {{16{ld_temp_data[15]}}, ld_temp_data[15:0]};
                 3'b010:  o_ld_data = ld_temp_data; 
                 default: o_ld_data = 32'b0011001100110011; //debugging
             endcase
-        end
     end
 
     /////////////////////////////////////////
@@ -92,7 +97,9 @@ module lsu (
                 //Store half-word
                 else if (i_s_length == 2'b01) {data_mem[data_mem_addr+13'h1], data_mem[data_mem_addr]} <= i_st_data[15:0];
                 //Store byte
-                else if (i_s_length == 2'b00) data_mem[data_mem_addr] <= i_st_data[7:0]; 
+                else if (i_s_length == 2'b00) data_mem[data_mem_addr] <= i_st_data[7:0];
+                //Other cases
+                else {data_mem[data_mem_addr+13'h3], data_mem[data_mem_addr+13'h2], data_mem[data_mem_addr+13'h1], data_mem[data_mem_addr]} <= 32'hFAFAFAFA;
             end
         end
     end
@@ -112,7 +119,9 @@ module lsu (
                 //Store half-word
                 else if (i_s_length == 2'b01) {output_mem[output_mem_addr+6'h1], output_mem[output_mem_addr]} <= i_st_data[15:0];
                 //Store byte
-                else if (i_s_length == 2'b00) output_mem[output_mem_addr] <= i_st_data[7:0]; 
+                else if (i_s_length == 2'b00) output_mem[output_mem_addr] <= i_st_data[7:0];
+                //Other cases
+                {output_mem[output_mem_addr+6'h3], output_mem[output_mem_addr+6'h2], output_mem[output_mem_addr+6'h1], output_mem[output_mem_addr]} <= 32'hFAFAFAFA;
             end
         end
     end
