@@ -1,4 +1,4 @@
-module singlecycle (
+module non_fwd (
     input  logic        i_clk,      // Global clock, active on the rising edge
     input  logic        i_rst_n,    // Global low active reset
     input  logic [31:0] i_io_sw,    // Input for switches
