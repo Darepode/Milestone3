@@ -15,6 +15,13 @@
 // ../01_bench/singlecycle_tb.sv
 
 // Test BRU
-../00_src/bru.sv
-../01_bench/bru_tb.sv
+//../00_src/bru.sv
+//../01_bench/bru_tb.sv
+
+// Test ALU
+../00_src/sll.sv
+../00_src/sra.sv
+../00_src/srl.sv
+../00_src/alu.sv
+../01_bench/alu_tb.sv
 

@@ -14,17 +14,17 @@ assign unsigned_lt  = carry;
 
 sll u1(
     .i_operand_a(i_operand_a),
-    .i_operand_b(i_operand_b),
+    .i_operand_b(i_operand_b[4:0]),
     .o_sll_data(temp_sll)
 );
 srl u2(
     .i_operand_a(i_operand_a),
-    .i_operand_b(i_operand_b),
+    .i_operand_b(i_operand_b[4:0]),
     .o_srl_data(temp_srl)
 );
 sra u3(
     .i_operand_a(i_operand_a),
-    .i_operand_b(i_operand_b),
+    .i_operand_b(i_operand_b[4:0]),
     .o_sra_data(temp_sra)
 );
 

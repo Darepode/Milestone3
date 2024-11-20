@@ -1,7 +1,7 @@
 .PHONY: comp sim wave run
 
 TEST_NAME=application
-BENCH=bru
+BENCH=alu
 
 comp:
 	iverilog -g2012 -s $(BENCH)_tb -o singlecycle_tb.vvp -c Filelist.f
