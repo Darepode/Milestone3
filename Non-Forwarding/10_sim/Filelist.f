@@ -19,9 +19,12 @@
 //../01_bench/bru_tb.sv
 
 // Test ALU
-../00_src/sll.sv
-../00_src/sra.sv
-../00_src/srl.sv
-../00_src/alu.sv
-../01_bench/alu_tb.sv
+//../00_src/sll.sv
+//../00_src/sra.sv
+//../00_src/srl.sv
+//../00_src/alu.sv
+//../01_bench/alu_tb.sv
 
+// Test HDU
+../00_src/blocks_reuse/hdu.sv
+../01_bench/hdu_tb.sv
