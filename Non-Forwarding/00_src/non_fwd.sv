@@ -1,6 +1,6 @@
 module non_fwd (
     input  logic        i_clk,      // Global clock, active on the rising edge
-    input  logic        i_rst_n,    // Global low active reset
+    input  logic        i_rstn,    // Global low active reset
     input  logic [31:0] i_io_sw,    // Input for switches
     input  logic [3:0]  i_io_btn,   // Input for buttons
     output logic [31:0] o_pc_debug, // Debug program counter
@@ -11,191 +11,384 @@ module non_fwd (
     output logic [31:0] o_io_lcd,    // Output for driving the LCD register
 	 
 	 // output to SRAM
-	 input logic         i_sram_oe_n,
+	 input  logic        i_sram_oe_n,
 	 output logic [17:0] o_sram_addr,
 	 inout  wire  [15:0] io_sram_dq,
 	 output logic        o_sram_ce_n, o_sram_we_n,
-							   o_sram_lb_n, o_sram_ub_o
-//	 output logic        sram_state_q_out,
-//	 output logic [31:0] PC_out,
-//	 output logic        sram_wren_out, sram_rden_out
-//	 output logic        state_out, mem_ack_out,
-//	 output logic true_mem_rden_out, true_mem_wren_out
+						 o_sram_lb_n, o_sram_ub_o
 ); 
 
+/*==============================   IF SIGNALS   ==============================*/
+    logic [31:0] IF_pc, IF_pcplus4, IF_instr, IF_pcnext;
+
+/*==============================   ID SIGNALS   ==============================*/
+    /* Control signal */
+    logic ID_insn_vld, ID_is_br, ID_rd_wren, ID_opa_sel, ID_mem_wren, ID_mem_rden, ID_wb_sel;
+    logic [1:0] ID_is_uncbr, ID_opb_sel;
+    logic [3:0] ID_alu_op;
+
+    /* Data signal */
+    logic [31:0] IFID_instr, IFID_pc, IFID_pcplus4;
+    logic [4:0]  IFID_rs1, IFID_rs2, IFID_rd;
+    logic [31:0] ID_rs1_data, ID_rs2_data, ID_imm;
+    logic [2:0]  IFID_func3;
+
+/*==============================   EX SIGNALS   ==============================*/
+    /* Control signal */
+    logic IDEX_insn_vld, IDEX_is_br, IDEX_rd_wren, IDEX_opa_sel, IDEX_mem_wren, IDEX_mem_rden, IDEX_wb_sel;
+    logic [1:0] IDEX_is_uncbr, IDEX_opb_sel;
+    logic [3:0] IDEX_alu_op;
+
+    /* Data signal */
+    logic [31:0] IDEX_pc, IDEX_pcplus4, IDEX_rs1_data, IDEX_rs2_data, IDEX_imm;
+    logic [2:0]  IDEX_func3;
+    logic [4:0]  IDEX_rd;
+    logic [31:0] EX_alu_data, EX_br_addr;
+    logic        EX_pcsel;
+    logic [31:0] EX_alu_opa, EX_alu_opb, EX_br_base; 
+ 
+/*==============================   MEM SIGNALS   ==============================*/
+    /* Control signal */
+    logic EXMEM_insn_vld, EXMEM_is_br, EXMEM_rd_wren, EXMEM_mem_wren, EXMEM_mem_rden, EXMEM_wb_sel;
+    logic [1:0] EXMEM_is_uncbr;
+
+    /* Data signal */
+    logic [31:0] EXMEM_alu_data, EXMEM_br_addr, EXMEM_rs2_data;
+    logic        EXMEM_pcsel;
+    logic [2:0]  EXMEM_func3;
+    logic [4:0]  EXMEM_rd;
+    logic [31:0] MEM_lsu_rdata;
+
+/*==============================   WB SIGNALS   ==============================*/
+    /* Control signal */
+    logic MEMWB_insn_vld, MEMWB_rd_wren, MEMWB_wb_sel;
+
+    /* Data signal */
+    logic [31:0] MEMWB_lsu_rdata, MEMWB_alu_data;
+    logic [4:0]  MEMWB_rd;
+    logic [31:0] WB_rd_data;
+
+/*==============================   HDU SIGNALS   ==============================*/
+    logic pc_wren, IFIDreg_clr, IFIDreg_wren, IDEXreg_clr, EXMEMreg_clr;
 
 
-reg  [31:0] PC_reg;
-wire [31:0] pc_next, pc_four, instr, wb_data, rs1_data, rs2_data, operand_a, operand_b, immediate, alu_data, ld_data, io_btn, io_sw;
-wire [0:0]  pc_sel, rd_wren, insn_vld, br_un, br_less, br_equal, opa_sel, opb_sel, mem_wren, mem_rden, l_unsigned;
-wire [1:0]  wb_sel, s_length;
-wire [2:0]  l_length;
-wire [3:0]  alu_op;
 
-reg         true_mem_rden, true_mem_wren, true_rd_wren;
-wire        pc_wren, cs0, mem_ack;
-wire        mem_ctrl_mux, reg_ctrl_mux;
+/*================================================================================================================*/
+                                                /*CONNECTIONS*/
+/*================================================================================================================*/
 
-//assign PC_out = PC_reg;
-//assign wren_out = mem_wren;
-//assign rden_out = mem_rden;
-//assign mem_ack_out = mem_ack;
-//assign true_mem_rden_out = true_mem_rden;
-//assign true_mem_wren_out = true_mem_wren;
-// MUXes for control signals: mem_rden, mem_wren, rd_wren
-always @(*) begin
-	case (mem_ctrl_mux)
-		1'b0: begin
-			true_mem_rden = mem_rden;
-			true_mem_wren = mem_wren;
-		end
-		1'b1: begin
-			true_mem_rden = 1'b0;
-			true_mem_wren = 1'b0;
-		end
-	endcase
-end
+/*==============================   IF STAGE   ==============================*/
+    // Instruction mem
+    imem inst_imem(
+        .i_addr(IF_pc),
+        .o_data(IF_instr)
+    );
 
-always @(*) begin
-	case (reg_ctrl_mux)
-		1'b0: begin
-			true_rd_wren = rd_wren;
-		end
-		1'b1: begin
-			true_rd_wren = 1'b0;
-		end
-	endcase
-end
-
-assign pc_next   = (!pc_sel)  ? pc_four  : alu_data;
-assign operand_a = (!opa_sel) ? rs1_data : PC_reg;
-assign operand_b = (!opb_sel) ? rs2_data : immediate;
-assign wb_data   = (!wb_sel)  ? alu_data : (wb_sel == 2'b01) ? ld_data: pc_four;
-
-always@( posedge i_clk or negedge i_rst_n) begin
-    if (!i_rst_n) begin
-        PC_reg <= 32'h00000000;
-        o_pc_debug <= 32'h00000000;
-        o_insn_vld <= 1'h0;
+    //PC reg: async rstn, sync wren
+    always @(posedge i_clk or negedge i_rstn) begin
+        if (!i_rstn) IF_pc <= 32'h0000_0000;
+        else begin
+            if (pc_wren) IF_pc <= IF_pcnext;
+            else IF_pc <= IF_pc; 
+        end
     end
-    else begin
-		if (pc_wren) begin
-        PC_reg <= pc_next;
-        o_pc_debug <= PC_reg;
-        o_insn_vld <= insn_vld;
-		 end
+
+    //PC plus 4 adder
+    assign IF_pcplus4 = IF_pc + 32'h4;
+
+    //next PC select mux
+    assign IF_pcnext = (!EXMEM_pcsel) ? IF_pcplus4 : EXMEM_br_addr;
+
+    // IFID pipeline register:
+    always @(posedge i_clk or negedge i_rstn) begin
+        if (!i_rstn) begin
+            IFID_pc      <= 32'h0000_0000;
+            IFID_pcplus4 <= 32'h0000_0000;
+            IFID_instr   <= 32'h0000_0000;
+        end
+        else begin
+            if (IFIDreg_clr) begin
+                IFID_pc      <= 32'h0000_0000;
+                IFID_pcplus4 <= 32'h0000_0000;
+                IFID_instr   <= 32'h0000_0000;
+            end else begin
+                if (IFIDreg_wren) begin
+                    IFID_pc      <= IF_pc;
+                    IFID_pcplus4 <= IF_pcplus4;
+                    IFID_instr   <= IF_instr;
+                end
+            end       
+        end        
     end
+
+/*==============================   ID STAGE   ==============================*/
+assign IFID_rs1   = IFID_instr[19:15];
+assign IFID_rs2   = IFID_instr[24:20];
+assign IFID_rd    = IFID_instr[11:7];
+assign IFID_func3 = IFID_instr[14:12];
+
+ctrl_unit inst_ctrl_unit (
+    .instr    (IFID_instr),
+
+    .rd_wren  (ID_rd_wren),      
+    .mem_wren (ID_mem_wren),     
+    .mem_rden (ID_mem_rden),     
+    .op_a_sel (ID_opa_sel),     
+    .op_b_sel (ID_opb_sel),     
+    .is_br    (ID_is_br),        
+    .is_uncbr (ID_is_uncbr),     
+    .wb_sel   (ID_wb_sel),       
+    .alu_op   (ID_alu_op),        
+    .insn_vld (ID_insn_vld)     
+);
+
+regfile inst_regfile (
+    .clk_i    (i_clk),     
+    .rd_wren  (MEMWB_rd_wren),   
+    .rst_ni   (i_rstn),    
+    .rd_addr  (MEMWB_rd),   
+    .rs1_addr (IFID_rs1),  
+    .rs2_addr (IFID_rs2),  
+    .rd_data  (WB_rd_data),   
+    .rs1_data (ID_rs1_data),  
+    .rs2_data (ID_rs2_data)   
+);
+
+immgen inst_immgen (
+    .instruction_i (IFID_instr),
+    .immediate_o   (ID_imm)
+);
+
+//IDEX pipeline register: async rstn, sync clr
+always @(posedge i_clk or negedge i_rstn) begin
+        if (!i_rstn) begin
+            //Control signals
+            IDEX_insn_vld <= 1'b0;
+            IDEX_is_br    <= 1'b0;
+            IDEX_is_uncbr <= 2'b00;
+            IDEX_rd_wren  <= 1'b0;
+            IDEX_opa_sel  <= 1'b0;
+            IDEX_opb_sel  <= 2'b00;
+            IDEX_alu_op   <= 4'b0000;
+            IDEX_mem_wren <= 1'b0;
+            IDEX_mem_rden <= 1'b0;
+            IDEX_wb_sel   <= 1'b0;
+
+            //Data signals
+            IDEX_pc       <= 32'h0000_0000;
+            IDEX_pcplus4  <= 32'h0000_0000;
+            IDEX_rs1_data <= 32'h0000_0000;
+            IDEX_rs2_data <= 32'h0000_0000;
+            IDEX_imm      <= 32'h0000_0000;
+            IDEX_func3    <= 3'b000;
+            IDEX_rd       <= 5'b0_0000;
+        end
+        else begin
+            if (IDEXreg_clr) begin
+                //Control signals
+                IDEX_insn_vld <= 1'b0;
+                IDEX_is_br    <= 1'b0;
+                IDEX_is_uncbr <= 2'b00;
+                IDEX_rd_wren  <= 1'b0;
+                IDEX_opa_sel  <= 1'b0;
+                IDEX_opb_sel  <= 2'b00;
+                IDEX_alu_op   <= 4'b0000;
+                IDEX_mem_wren <= 1'b0;
+                IDEX_mem_rden <= 1'b0;
+                IDEX_wb_sel   <= 1'b0;
+
+                //Data signals
+                IDEX_pc       <= 32'h0000_0000;
+                IDEX_pcplus4  <= 32'h0000_0000;
+                IDEX_rs1_data <= 32'h0000_0000;
+                IDEX_rs2_data <= 32'h0000_0000;
+                IDEX_imm      <= 32'h0000_0000;
+                IDEX_func3    <= 3'b000;
+                IDEX_rd       <= 5'b0_0000;
+            end
+            else begin
+                //Control signals
+                IDEX_insn_vld <= ID_insn_vld;
+                IDEX_is_br    <= ID_is_br;
+                IDEX_is_uncbr <= ID_is_uncbr;
+                IDEX_rd_wren  <= ID_rd_wren;
+                IDEX_opa_sel  <= ID_opa_sel;
+                IDEX_opb_sel  <= ID_opb_sel;
+                IDEX_alu_op   <= ID_alu_op;
+                IDEX_mem_wren <= ID_mem_wren;
+                IDEX_mem_rden <= ID_mem_rden;
+                IDEX_wb_sel   <= ID_wb_sel;
+
+                //Data signals
+                IDEX_pc       <= IFID_pc;
+                IDEX_pcplus4  <= IFID_pcplus4;
+                IDEX_rs1_data <= ID_rs1_data;
+                IDEX_rs2_data <= ID_rs2_data;
+                IDEX_imm      <= ID_imm;
+                IDEX_func3    <= IFID_func3;
+                IDEX_rd       <= IFID_rd;
+                
+            end
+        end        
+    end
+
+/*==============================   EX STAGE   ==============================*/
+assign EX_alu_opa = (!IDEX_opa_sel) ? IDEX_rs1_data : IDEX_pc;
+assign EX_alu_opb = (IDEX_opb_sel == 2'b00) ? IDEX_rs2_data :
+                    (IDEX_opb_sel == 2'b01) ? IDEX_imm : IDEX_pcplus4;
+
+alu inst_alu (
+    .i_operand_a (EX_alu_opa),  
+    .i_operand_b (EX_alu_opb),  
+    .i_alu_op    (IDEX_alu_op),     
+    .o_alu_data  (EX_alu_data)    
+);
+
+assign EX_br_base = (!IDEX_is_uncbr[0]) ? IDEX_pc : IDEX_rs1_data;
+assign EX_br_addr = IDEX_imm + EX_br_base;
+
+bru inst_bru (
+    .rs1_data (IDEX_rs1_data),  
+    .rs2_data (IDEX_rs2_data),  
+    .is_br    (IDEX_is_br),     
+    .is_uncbr (IDEX_is_uncbr[1]),  
+    .func3    (IDEX_func3),     
+    .pc_sel   (EX_pcsel)     
+);
+
+//EXMEM pipeline register: async rstn, sync clr
+always @(posedge i_clk or negedge i_rstn) begin
+        if (!i_rstn) begin
+            //Control signals
+            EXMEM_insn_vld <= 1'b0;
+            EXMEM_is_br    <= 1'b0;
+            EXMEM_is_uncbr <= 2'b00;
+            EXMEM_rd_wren  <= 1'b0;
+            EXMEM_mem_wren <= 1'b0;
+            EXMEM_mem_rden <= 1'b0;
+            EXMEM_wb_sel   <= 1'b0;
+
+            //Data signals
+            EXMEM_alu_data <= 32'h0000_0000;
+            EXMEM_rs2_data <= 32'h0000_0000;
+            EXMEM_br_addr  <= 32'h0000_0000;
+            EXMEM_pcsel    <= 1'b0;
+            EXMEM_func3    <= 3'b000;
+            EXMEM_rd       <= 5'b0_0000;
+        end
+        else begin
+            if (EXMEMreg_clr) begin
+                //Control signals
+                EXMEM_insn_vld <= 1'b0;
+                EXMEM_is_br    <= 1'b0;
+                EXMEM_is_uncbr <= 2'b00;
+                EXMEM_rd_wren  <= 1'b0;
+                EXMEM_mem_wren <= 1'b0;
+                EXMEM_mem_rden <= 1'b0;
+                EXMEM_wb_sel   <= 1'b0;
+
+                //Data signals
+                EXMEM_alu_data <= 32'h0000_0000;
+                EXMEM_rs2_data <= 32'h0000_0000;
+                EXMEM_br_addr  <= 32'h0000_0000;
+                EXMEM_pcsel    <= 1'b0;
+                EXMEM_func3    <= 3'b000;
+                EXMEM_rd       <= 5'b0_0000;
+            end
+            else begin
+                //Control signals
+                EXMEM_insn_vld <= IDEX_insn_vld;
+                EXMEM_is_br    <= IDEX_is_br;
+                EXMEM_is_uncbr <= IDEX_is_uncbr;
+                EXMEM_rd_wren  <= IDEX_rd_wren;
+                EXMEM_mem_wren <= IDEX_mem_wren;
+                EXMEM_mem_rden <= IDEX_mem_rden;
+                EXMEM_wb_sel   <= IDEX_wb_sel;
+
+                //Data signals
+                EXMEM_alu_data <= EX_alu_data;
+                EXMEM_rs2_data <= IDEX_rs2_data;
+                EXMEM_br_addr  <= EX_br_addr;
+                EXMEM_pcsel    <= EX_pcsel;
+                EXMEM_func3    <= IDEX_func3;
+                EXMEM_rd       <= IDEX_rd;
+            end
+        end        
 end
 
-adder adder4_inst (
-    .operand_a  (PC_reg),    
-    .operand_b  (32'h4),    
-    .adder_data (pc_four)     
+/*==============================   MEM STAGE   ==============================*/
+lsu inst_lsu (
+    .i_clk      (i_clk),      
+    .i_rst_n    (i_rstn),    
+    .i_lsu_wren (EXMEM_mem_wren), 
+    //.i_lsu_rden (EXMEM_mem_rden), 
+    .i_func3    (EXMEM_func3),    
+    .i_st_data  (EXMEM_rs2_data),  
+    .i_io_sw    (i_io_sw),    
+    .i_io_btn   (i_io_btn),     
+    .i_lsu_addr (EXMEM_alu_data), 
+    .o_ld_data  (MEM_lsu_rdata),  
+    .o_io_lcd   (o_io_lcd),    
+    .o_io_ledg  (o_io_ledg),    
+    .o_io_ledr  (o_io_ledr),    
+    .o_io_hex0  (o_io_hex0),    
+    .o_io_hex1  (o_io_hex1),    
+    .o_io_hex2  (o_io_hex2),    
+    .o_io_hex3  (o_io_hex3),    
+    .o_io_hex4  (o_io_hex4),    
+    .o_io_hex5  (o_io_hex5),    
+    .o_io_hex6  (o_io_hex6),    
+    .o_io_hex7  (o_io_hex7)      
 );
 
-imem imem_inst (
-    .i_addr (PC_reg),
-    .o_data (instr)
+//MEMWB pipeline register: async rstn
+always @(posedge i_clk or negedge i_rstn) begin
+        if (!i_rstn) begin
+            //Control signals
+            MEMWB_insn_vld <= 1'b0;
+            MEMWB_rd_wren  <= 1'b0;
+            MEMWB_wb_sel   <= 1'b0;
+
+            //Data signals
+            MEMWB_alu_data  <= 32'h0000_0000;
+            MEMWB_lsu_rdata <= 32'h0000_0000;
+            MEMWB_rd        <= 5'b0_0000;
+        end
+        else begin
+            //Control signals
+            MEMWB_insn_vld <= EXMEM_insn_vld;
+            MEMWB_rd_wren  <= EXMEM_rd_wren;
+            MEMWB_wb_sel   <= EXMEM_wb_sel;
+
+            //Data signals
+            MEMWB_alu_data  <= EXMEM_alu_data;
+            MEMWB_lsu_rdata <= MEM_lsu_rdata;
+            MEMWB_rd        <= EXMEM_rd;
+        end
+end
+
+/*==============================   WB STAGE   ==============================*/
+assign WB_rd_data = (!MEMWB_wb_sel) ? MEMWB_alu_data : MEMWB_lsu_rdata;
+assign o_insn_vld = MEMWB_insn_vld;
+
+/*==============================      HDU     ==============================*/
+hdu inst_hdu (
+    .EXMEM_pcsel    (EXMEM_pcsel),  
+    .EXMEM_is_br    (EXMEM_is_br),  
+    .EXMEM_is_uncbr (EXMEM_is_uncbr),
+    .IDEX_rdwren    (IDEX_rd_wren),  
+    .EXMEM_rdwren   (EXMEM_rdwren), 
+    .IDEX_rd        (IDEX_rd),      
+    .EXMEM_rd       (EXMEM_rd),     
+    .IFID_rs1       (IFID_rs1),     
+    .IFID_rs2       (IFID_rs2),     
+    .IFID_clear     (IFIDreg_clr),   
+    .IFID_wren      (IFIDreg_wren),    
+    .IDEX_clear     (IDEXreg_clr),   
+    .EXMEM_clear    (EXMEMreg_clr),  
+    .pc_wren        (pc_wren)       
 );
 
-regfile regfile_inst (
-    .clk_i    (i_clk),            
-    .rd_wren  (true_rd_wren),          
-    .rst_ni   (i_rst_n),           
-    .rd_addr  (instr[11:7]),          
-    .rs1_addr (instr[19:15]),         
-    .rs2_addr (instr[24:20]),         
-    .rd_data  (wb_data),          
-    .rs1_data (rs1_data),         
-    .rs2_data (rs2_data)          
-);
 
-immgen immgen_inst (
-    .instruction_i(instr),    
-    .immediate_o  (immediate)       
-);
-
-brcomp brcomp_inst (
-    .rs1_data    (rs1_data),    
-    .rs2_data    (rs2_data),    
-    .br_unsigned (br_un),    
-    .br_less     (br_less),    
-    .br_equal    (br_equal)     
-);
-
-alu alu_inst (
-    .i_operand_a (operand_a),    
-    .i_operand_b (operand_b),    
-    .i_alu_op    (alu_op),    
-    .o_alu_data  (alu_data)     
-);
-
-lsu lsu_inst (
-    .i_clk        (i_clk),    
-    .i_rst_n      (i_rst_n),     
-    .i_lsu_wren   (true_mem_wren),
-	 .i_lsu_rden   (true_mem_rden),
-    .i_l_unsigned (l_unsigned),    
-    .i_l_length   (l_length),    
-    .i_s_length   (s_length),     
-    .i_lsu_addr   (alu_data),    
-    .i_st_data    (rs2_data),    
-    .i_io_sw      (i_io_sw),    
-    .i_io_btn     (i_io_btn),    
-    .o_ld_data    (ld_data),    
-    .o_io_lcd     (o_io_lcd),    
-    .o_io_ledg    (o_io_ledg),    
-    .o_io_ledr    (o_io_ledr),    
-    .o_io_hex0    (o_io_hex0),    
-    .o_io_hex1    (o_io_hex1),    
-    .o_io_hex2    (o_io_hex2),    
-    .o_io_hex3    (o_io_hex3),    
-    .o_io_hex4    (o_io_hex4),    
-    .o_io_hex5    (o_io_hex5),    
-    .o_io_hex6    (o_io_hex6),    
-    .o_io_hex7    (o_io_hex7),
-	
-	 .o_cs0        (cs0),
-	 .o_ack        (mem_ack),
-	 .o_sram_addr  (o_sram_addr),
-	 .io_sram_dq   (io_sram_dq),
-	 .o_sram_ce_n  (o_sram_ce_n),
-	 .o_sram_we_n  (o_sram_we_n),
-	 .o_sram_lb_n  (o_sram_lb_n),
-	 .o_sram_ub_o  (o_sram_ub_o),
-	 .i_sram_oe_n  (i_sram_oe_n)
-);
-
-ctrl_unit ctrl_unit_inst (
-    .instr       (instr),    
-    .br_less     (br_less),    
-    .br_equal    (br_equal), 
-    .l_length    (l_length),   
-    .br_sel      (pc_sel),    
-    .br_unsigned (br_un),    
-    .rd_wren     (rd_wren),
-    .mem_wren    (mem_wren),
-	 .mem_rden    (mem_rden),
-    .op_a_sel    (opa_sel),    
-    .op_b_sel    (opb_sel),    
-    .insn_vld    (insn_vld),  
-    .l_unsigned  (l_unsigned),  
-    .wb_sel      (wb_sel),
-    .s_length    (s_length),
-    .alu_op      (alu_op)     
-);
-
-ctrl_fsm ctrl_fsm_inst (
-	.clk          (i_clk),
-	.rstn         (i_rst_n),
-	.rden         (mem_rden), 
-	.wren         (mem_wren),
-	.cs0          (cs0),
-	.ack          (mem_ack),
-	.PC_wren      (pc_wren),
-	.mem_ctrl_mux (mem_ctrl_mux),
-	//.state_out    (state_out),
-	.reg_ctrl_mux (reg_ctrl_mux)
-);
 
 endmodule

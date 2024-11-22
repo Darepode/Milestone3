@@ -5,22 +5,23 @@ module hdu_tb ();
     logic clear_ifid, clear_idex, clear_exmem, wren_ifid, pc_wren; 
 
 
-    hdu inst_hdu(
-        .pcsel_exmem(pcsel_exmem),       
-        .is_br_exmem(is_br_exmem),       
-        .is_uncbr_exmem(is_uncbr_exmem), 
-        .rdwren_idex(rdwren_idex),       
-        .rd_idex(rd_idex),               
-        .rdwren_exmem(rdwren_exmem),     
-        .rd_exmem(rd_exmem),             
-        .rs1_ifid(rs1_ifid),             
-        .rs2_ifid(rs2_ifid),             
-        .clear_ifid(clear_ifid),         
-        .clear_idex(clear_idex),         
-        .clear_exmem(clear_exmem),       
-        .wren_ifid(wren_ifid),           
-        .pc_wren(pc_wren)                
+    hdu inst_hdu (
+        .EXMEM_pcsel(pcsel_exmem),         
+        .EXMEM_is_br(is_br_exmem),         
+        .EXMEM_is_uncbr(is_uncbr_exmem),   
+        .IDEX_rdwren(rdwren_idex),         
+        .IDEX_rd(rd_idex),                 
+        .EXMEM_rdwren(rdwren_exmem),       
+        .EXMEM_rd(rd_exmem),               
+        .IFID_rs1(rs1_ifid),               
+        .IFID_rs2(rs2_ifid),               
+        .IFID_clear(clear_ifid),           
+        .IDEX_clear(clear_idex),           
+        .EXMEM_clear(clear_exmem),         
+        .IFID_wren(wren_ifid),             
+        .pc_wren(pc_wren)                  
     );
+
 
     integer fd;
     initial begin      
@@ -74,25 +75,28 @@ module hdu_tb ();
     input bit [4:0]  rs2_ifid
     ); begin
         if(pcsel_exmem && (is_br_exmem || is_uncbr_exmem)) begin
-            if (inst_hdu.clear_ifid  != 1'b1 ||
-                inst_hdu.clear_idex  != 1'b1 ||
-                inst_hdu.clear_exmem != 1'b1) begin $fdisplay(fd,"ERROR at branch flushing");
-                                                    $fdisplay(fd,"  Expected: clear_ifid=1, clear_idex=1, clear_exmem=1");
-                                                    $fdisplay(fd,"  Got: clear_ifid=%b, clear_idex=%b, clear_exmem=%b\n", inst_hdu.clear_ifid, inst_hdu.clear_idex, inst_hdu.clear_exmem); end 
+            if (inst_hdu.IFID_clear  != 1'b1 || // Updated to IFID_clear
+                inst_hdu.IDEX_clear  != 1'b1 || // Updated to IDEX_clear
+                inst_hdu.EXMEM_clear != 1'b1) begin // Updated to EXMEM_clear
+                $fdisplay(fd,"ERROR at branch flushing");
+                $fdisplay(fd,"  Expected: IFID_clear=1, IDEX_clear=1, EXMEM_clear=1");
+                $fdisplay(fd,"  Got: IFID_clear=%b, IDEX_clear=%b, EXMEM_clear=%b\n", inst_hdu.IFID_clear, inst_hdu.IDEX_clear, inst_hdu.EXMEM_clear); 
+            end 
         end else if((rdwren_idex && (rd_idex == rs1_ifid || rd_idex == rs2_ifid)) || 
                     (rdwren_exmem && (rd_exmem == rs1_ifid || rd_exmem == rs2_ifid))) begin
-                      if(inst_hdu.pc_wren    != 1'b0 || 
-                        inst_hdu.wren_ifid   != 1'b0 ||
-                        inst_hdu.clear_idex  != 1'b1) $fdisplay(fd,"ERROR at STALLING\n");
+            if(inst_hdu.pc_wren    != 1'b0 || 
+               inst_hdu.IFID_wren  != 1'b0 || // Updated to IFID_wren
+               inst_hdu.IDEX_clear != 1'b1) // Updated to IDEX_clear
+                $fdisplay(fd,"ERROR at STALLING\n");
         end else begin 
-         if(inst_hdu.clear_ifid     != 1'b0 ||
-            inst_hdu.clear_idex     != 1'b0 ||
-            inst_hdu.clear_exmem    != 1'b0 ||
-            inst_hdu.pc_wren        != 1'b1 ||
-            inst_hdu.wren_ifid      != 1'b1) $fdisplay(fd,"ERROR at DEFAULT\n");           
+            if(inst_hdu.IFID_clear  != 1'b0 || // Updated to IFID_clear
+               inst_hdu.IDEX_clear  != 1'b0 || // Updated to IDEX_clear
+               inst_hdu.EXMEM_clear != 1'b0 || // Updated to EXMEM_clear
+               inst_hdu.pc_wren     != 1'b1 ||
+               inst_hdu.IFID_wren   != 1'b1) // Updated to IFID_wren
+                $fdisplay(fd,"ERROR at DEFAULT\n");           
         end
-    end     
-        
+    end    
     endtask
 
 endmodule
