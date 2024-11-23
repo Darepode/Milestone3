@@ -375,9 +375,9 @@ assign o_insn_vld = MEMWB_insn_vld;
 hdu inst_hdu (
     .EXMEM_pcsel    (EXMEM_pcsel),  
     .EXMEM_is_br    (EXMEM_is_br),  
-    .EXMEM_is_uncbr (EXMEM_is_uncbr),
+    .EXMEM_is_uncbr (EXMEM_is_uncbr[1]),
     .IDEX_rdwren    (IDEX_rd_wren),  
-    .EXMEM_rdwren   (EXMEM_rdwren), 
+    .EXMEM_rdwren   (EXMEM_rd_wren), 
     .IDEX_rd        (IDEX_rd),      
     .EXMEM_rd       (EXMEM_rd),     
     .IFID_rs1       (IFID_rs1),     

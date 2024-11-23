@@ -1,2 +1,7 @@
-Non-Forwarding/10_sim/singlecycle_tb.vvp
 Non-Forwarding/10_sim/result.log
+Non-Forwarding/10_sim/non_fwd_tb.vcd
+Non-Forwarding/10_sim/non_fwd_tb.vvp
+Non-Forwarding/10_sim/Mem_after.data
+Non-Forwarding/10_sim/Out_Mem_after.data
+Non-Forwarding/10_sim/In_Mem_after.data
+

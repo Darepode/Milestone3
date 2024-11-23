@@ -1,23 +1,23 @@
 .PHONY: comp sim wave run
 
 TEST_NAME=application
-BENCH=hdu
+BENCH=non_fwd
 
 comp:
-	iverilog -g2012 -s $(BENCH)_tb -o singlecycle_tb.vvp -c Filelist.f
+	iverilog -g2012 -s $(BENCH)_tb -o non_fwd_tb.vvp -c Filelist.f
 
 sim:
-	vvp singlecycle_tb.vvp
+	vvp non_fwd_tb.vvp
 
 wave:
-	gtkwave singlecycle_tb.vcd
+	gtkwave non_fwd_tb.vcd
 
 hex:
 	riscv32-unknown-elf-as -o ../02_test/test_assembly.o ../02_test/$(TEST_NAME).asm &&\
 	riscv32-unknown-elf-objcopy -O verilog ../02_test/test_assembly.o ../02_test/dump/mem.dump &&\
 	riscv32-unknown-elf-objdump -d ../02_test/test_assembly.o > ../02_test/output.asm &&\
     (cd ../02_test/dump && python3 imem_file_gen.py) &&\
-	cp /home/datpham/CTMT/Milestone2/singlecycle/02_test/dump/mem_padded.dump /mnt/d/CTMT/MileStone2/singlecycle/02_test
+	cp /home/datpham/CTMT/Milestone3/Non-Forwarding/02_test/dump/mem_padded.dump /mnt/d/CTMT/MileStone3_NonFwd/02_test
 run:
 	make hex && make comp && make sim
 

@@ -19,11 +19,11 @@ module lsu (
 
     wire i_l_unsigned;
     wire [1:0] i_s_length;
-    wire [2:0] i_l_length;
+    wire [1:0] i_l_length;
 
-    assign i_s_length   = func3[1:0];
-    assign i_l_length   = func3[1:0];
-    assign i_l_unsigned = func3[2];
+    assign i_s_length   = i_func3[1:0];
+    assign i_l_length   = i_func3[1:0];
+    assign i_l_unsigned = i_func3[2];
 
 
     // Declare memory space

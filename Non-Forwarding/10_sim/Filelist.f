@@ -1,16 +1,19 @@
-// ../00_src/adder.sv
-// ../00_src/alu.sv
-// ../00_src/brcomp.sv
-// ../00_src/ctrl_unit.sv
-// ../00_src/imem.sv
-// ../00_src/immgen.sv
-// ../00_src/lsu.sv
-// ../00_src/regfile.sv
-// ../00_src/singlecycle.sv
-// ../00_src/sll.sv
-// ../00_src/sra.sv
-// ../00_src/srl.sv
-// ../00_src/ctrl_fsm.sv
+../00_src/blocks_reuse/adder.sv
+../00_src/blocks_reuse/alu.sv
+../00_src/blocks_reuse/bru.sv
+../00_src/blocks_reuse/ctrl_unit.sv
+../00_src/blocks_reuse/hdu.sv
+../00_src/blocks_reuse/imem.sv
+../00_src/blocks_reuse/immgen.sv
+../00_src/blocks_reuse/lsu.sv
+../00_src/blocks_reuse/regfile.sv
+../00_src/blocks_reuse/sll.sv
+../00_src/blocks_reuse/sra.sv
+../00_src/blocks_reuse/srl.sv
+../00_src/non_fwd.sv
+
+../01_bench/non_fwd_tb.sv
+
 
 // ../01_bench/singlecycle_tb.sv
 
@@ -18,13 +21,5 @@
 //../00_src/bru.sv
 //../01_bench/bru_tb.sv
 
-// Test ALU
-//../00_src/sll.sv
-//../00_src/sra.sv
-//../00_src/srl.sv
-//../00_src/alu.sv
-//../01_bench/alu_tb.sv
-
 // Test HDU
-../00_src/blocks_reuse/hdu.sv
-../01_bench/hdu_tb.sv
+//../01_bench/hdu_tb.sv
