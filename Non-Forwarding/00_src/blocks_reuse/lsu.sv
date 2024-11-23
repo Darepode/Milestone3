@@ -99,7 +99,7 @@ module lsu (
                 //Store byte
                 else if (i_s_length == 2'b00) data_mem[data_mem_addr] <= i_st_data[7:0];
                 //Other cases
-                else {data_mem[data_mem_addr+13'h3], data_mem[data_mem_addr+13'h2], data_mem[data_mem_addr+13'h1], data_mem[data_mem_addr]} <= 32'hFAFAFAFA;
+                else data_mem[data_mem_addr] <= data_mem[data_mem_addr];
             end
         end
     end
@@ -121,7 +121,7 @@ module lsu (
                 //Store byte
                 else if (i_s_length == 2'b00) output_mem[output_mem_addr] <= i_st_data[7:0];
                 //Other cases
-                {output_mem[output_mem_addr+6'h3], output_mem[output_mem_addr+6'h2], output_mem[output_mem_addr+6'h1], output_mem[output_mem_addr]} <= 32'hFAFAFAFA;
+                else output_mem[output_mem_addr] <= output_mem[output_mem_addr];
             end
         end
     end
