@@ -123,16 +123,43 @@ non_fwd non_fwd_inst (
         #10 i_rst_n = 1;
     end
 
+    integer nop_count;
+    initial begin
+        nop_count = 0;
+        forever begin
+        @(posedge i_clk);
+        if(o_insn_vld == 0) nop_count++;
+        end
+    end
+
+    // // Wave dump
+    // initial begin
+    //     $dumpfile("non_fwd_tb.vcd");
+    //     $dumpvars(0,non_fwd_tb);
+    //     #100000 begin
+    //        $writememh("Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.data_mem);
+    //        $writememh("Out_Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.output_mem);
+    //        $writememh("In_Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.input_mem);
+    //        $display("Number of NOP of the applications is %0d", nop_count);
+    //        if(non_fwd_inst.IF_instr == 32'h0000006f) begin
+    //        repeat(4) @(posedge i_clk);
+    //        $finish(); 
+    //        end
+    //     end
+    // end
+
     // Wave dump
     initial begin
         $dumpfile("non_fwd_tb.vcd");
         $dumpvars(0,non_fwd_tb);
-        #100000 begin
+        wait(non_fwd_inst.IF_instr == 32'h0000006f) begin
            $writememh("Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.data_mem);
            $writememh("Out_Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.output_mem);
            $writememh("In_Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.input_mem);
+           $display("Number of NOP of the applications is %0d", nop_count);
+           repeat(4) @(posedge i_clk);
            $finish(); 
-        end
+           end
     end
     
     // Initilize memory
