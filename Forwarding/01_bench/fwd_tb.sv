@@ -148,10 +148,10 @@ fwd fwd_inst (
     //     end
     // end
 
-    initial begin
-        #100
-        $finish();
-    end 
+    // initial begin
+    //     #100
+    //     $finish();
+    // end 
 
     // Wave dump
     initial begin

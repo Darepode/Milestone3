@@ -242,9 +242,9 @@ always @(posedge i_clk or negedge i_rstn) begin
 
 /*==============================   EX STAGE   ==============================*/
 assign EX_fwd_rs1_data = (rs1_sel == 2'b00) ? IDEX_rs1_data  :
-                         (rs1_sel == 2'b01) ? EXMEM_alu_data : MEMWB_lsu_rdata;
-assign EX_fwd_rs2_data = (rs1_sel == 2'b00) ? IDEX_rs2_data  :
-                         (rs1_sel == 2'b01) ? EXMEM_alu_data : MEMWB_lsu_rdata;
+                         (rs1_sel == 2'b01) ? EXMEM_alu_data : WB_rd_data;
+assign EX_fwd_rs2_data = (rs2_sel == 2'b00) ? IDEX_rs2_data  :
+                         (rs2_sel == 2'b01) ? EXMEM_alu_data : WB_rd_data;
 
 
 assign EX_alu_opa = (!IDEX_opa_sel) ? EX_fwd_rs1_data : IDEX_pc;
