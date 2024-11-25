@@ -42,10 +42,10 @@ module fwd (
     /* Data signal */
     logic [31:0] IDEX_pc, IDEX_pcplus4, IDEX_rs1_data, IDEX_rs2_data, IDEX_imm;
     logic [2:0]  IDEX_func3;
-    logic [4:0]  IDEX_rd;
+    logic [4:0]  IDEX_rd, IDEX_rs1, IDEX_rs2;
     logic [31:0] EX_alu_data, EX_br_addr;
     logic        EX_pcsel;
-    logic [31:0] EX_alu_opa, EX_alu_opb, EX_br_base; 
+    logic [31:0] EX_alu_opa, EX_alu_opb, EX_br_base, EX_fwd_rs1_data, EX_fwd_rs2_data; 
  
 /*==============================   MEM SIGNALS   ==============================*/
     /* Control signal */
@@ -71,7 +71,8 @@ module fwd (
 /*==============================   HDU SIGNALS   ==============================*/
     logic pc_wren, IFIDreg_clr, IFIDreg_wren, IDEXreg_clr, EXMEMreg_clr;
 
-
+/*==============================   FWD UNIT SIGNALS   ==============================*/
+    logic [1:0] rs1_sel, rs2_sel;
 
 /*================================================================================================================*/
                                                 /*CONNECTIONS*/
@@ -173,6 +174,7 @@ always @(posedge i_clk or negedge i_rstn) begin
             IDEX_mem_wren <= 1'b0;
             IDEX_mem_rden <= 1'b0;
             IDEX_wb_sel   <= 1'b0;
+            
 
             //Data signals
             IDEX_pc       <= 32'h0000_0000;
@@ -182,6 +184,8 @@ always @(posedge i_clk or negedge i_rstn) begin
             IDEX_imm      <= 32'h0000_0000;
             IDEX_func3    <= 3'b000;
             IDEX_rd       <= 5'b0_0000;
+            IDEX_rs1      <= 5'b0;
+            IDEX_rs2      <= 5'b0;
         end
         else begin
             if (IDEXreg_clr) begin
@@ -205,6 +209,8 @@ always @(posedge i_clk or negedge i_rstn) begin
                 IDEX_imm      <= 32'h0000_0000;
                 IDEX_func3    <= 3'b000;
                 IDEX_rd       <= 5'b0_0000;
+                IDEX_rs1      <= 5'b0;
+                IDEX_rs2      <= 5'b0;
             end
             else begin
                 //Control signals
@@ -227,14 +233,22 @@ always @(posedge i_clk or negedge i_rstn) begin
                 IDEX_imm      <= ID_imm;
                 IDEX_func3    <= IFID_func3;
                 IDEX_rd       <= IFID_rd;
+                IDEX_rs1      <= IFID_rs1;
+                IDEX_rs2      <= IFID_rs2;
                 
             end
         end        
     end
 
 /*==============================   EX STAGE   ==============================*/
-assign EX_alu_opa = (!IDEX_opa_sel) ? IDEX_rs1_data : IDEX_pc;
-assign EX_alu_opb = (IDEX_opb_sel == 2'b00) ? IDEX_rs2_data :
+assign EX_fwd_rs1_data = (rs1_sel == 2'b00) ? IDEX_rs1_data  :
+                         (rs1_sel == 2'b01) ? EXMEM_alu_data : MEMWB_lsu_rdata;
+assign EX_fwd_rs2_data = (rs1_sel == 2'b00) ? IDEX_rs2_data  :
+                         (rs1_sel == 2'b01) ? EXMEM_alu_data : MEMWB_lsu_rdata;
+
+
+assign EX_alu_opa = (!IDEX_opa_sel) ? EX_fwd_rs1_data : IDEX_pc;
+assign EX_alu_opb = (IDEX_opb_sel == 2'b00) ? EX_fwd_rs2_data :
                     (IDEX_opb_sel == 2'b01) ? IDEX_imm : IDEX_pcplus4;
 
 alu inst_alu (
@@ -244,12 +258,12 @@ alu inst_alu (
     .o_alu_data  (EX_alu_data)    
 );
 
-assign EX_br_base = (!IDEX_is_uncbr[0]) ? IDEX_pc : IDEX_rs1_data;
+assign EX_br_base = (!IDEX_is_uncbr[0]) ? IDEX_pc : EX_fwd_rs1_data;
 assign EX_br_addr = IDEX_imm + EX_br_base;
 
 bru inst_bru (
-    .rs1_data (IDEX_rs1_data),  
-    .rs2_data (IDEX_rs2_data),  
+    .rs1_data (EX_fwd_rs1_data),  
+    .rs2_data (EX_fwd_rs2_data),  
     .is_br    (IDEX_is_br),     
     .is_uncbr (IDEX_is_uncbr[1]),  
     .func3    (IDEX_func3),     
@@ -307,7 +321,7 @@ always @(posedge i_clk or negedge i_rstn) begin
 
                 //Data signals
                 EXMEM_alu_data <= EX_alu_data;
-                EXMEM_rs2_data <= IDEX_rs2_data;
+                EXMEM_rs2_data <= EX_fwd_rs2_data;
                 EXMEM_br_addr  <= EX_br_addr;
                 EXMEM_pcsel    <= EX_pcsel;
                 EXMEM_func3    <= IDEX_func3;
@@ -376,10 +390,9 @@ hdu inst_hdu (
     .EXMEM_pcsel    (EXMEM_pcsel),  
     .EXMEM_is_br    (EXMEM_is_br),  
     .EXMEM_is_uncbr (EXMEM_is_uncbr[1]),
-    .IDEX_rdwren    (IDEX_rd_wren),  
-    .EXMEM_rdwren   (EXMEM_rd_wren), 
-    .IDEX_rd        (IDEX_rd),      
-    .EXMEM_rd       (EXMEM_rd),     
+    .IDEX_rdwren    (IDEX_rd_wren),
+    .IDEX_mem_rden  (IDEX_mem_rden),
+    .IDEX_rd        (IDEX_rd),           
     .IFID_rs1       (IFID_rs1),     
     .IFID_rs2       (IFID_rs2),     
     .IFID_clear     (IFIDreg_clr),   
@@ -388,7 +401,17 @@ hdu inst_hdu (
     .EXMEM_clear    (EXMEMreg_clr),  
     .pc_wren        (pc_wren)       
 );
-
+/*==============================      FWD UNIT     ==============================*/
+fwd_unit fwd_unit_inst (
+    .IDEX_rs1       (IDEX_rs1),      
+    .IDEX_rs2       (IDEX_rs2),      
+    .EXMEM_rd       (EXMEM_rd),      
+    .MEMWB_rd       (MEMWB_rd),      
+    .EXMEM_rd_wren  (EXMEM_rd_wren), 
+    .MEMWB_rd_wren  (MEMWB_rd_wren), 
+    .rs1_sel        (rs1_sel),       
+    .rs2_sel        (rs2_sel)          
+);
 
 
 endmodule

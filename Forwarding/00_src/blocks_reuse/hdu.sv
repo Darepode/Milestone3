@@ -1,7 +1,7 @@
 module hdu (
-    input logic EXMEM_pcsel, EXMEM_is_br, EXMEM_is_uncbr, 
-                IDEX_rdwren, EXMEM_rdwren,      
-    input logic [4:0] IDEX_rd, EXMEM_rd, IFID_rs1, IFID_rs2,
+    input  logic EXMEM_pcsel, EXMEM_is_br, EXMEM_is_uncbr, 
+                 IDEX_rdwren, IDEX_mem_rden,     
+    input  logic [4:0] IDEX_rd, IFID_rs1, IFID_rs2,
 
     output logic IFID_clear, IDEX_clear,
                  EXMEM_clear, IFID_wren, pc_wren  
@@ -13,8 +13,7 @@ module hdu (
             EXMEM_clear = 1'b1;
             pc_wren     = 1'b1;
             IFID_wren   = 1'b1;           
-        end else if((IDEX_rdwren && (IDEX_rd == IFID_rs1 || IDEX_rd == IFID_rs2)) || 
-                    (EXMEM_rdwren && (EXMEM_rd == IFID_rs1 || EXMEM_rd == IFID_rs2))) begin
+        end else if((IDEX_mem_rden && IDEX_rdwren && (IDEX_rd == IFID_rs1 || IDEX_rd == IFID_rs2))) begin
                         pc_wren    = 1'b0;
                         IFID_wren  = 1'b0;
                         IDEX_clear = 1'b1;
