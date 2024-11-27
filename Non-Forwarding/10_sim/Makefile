@@ -1,6 +1,6 @@
 .PHONY: comp sim wave run
 
-TEST_NAME=application
+TEST_NAME=test
 BENCH=non_fwd
 
 comp:
@@ -22,4 +22,7 @@ run:
 	make hex && make comp && make sim
 
 test:
+	riscv32-unknown-elf-as -o ../02_test/test_assembly.o ../02_test/$(TEST_NAME).asm &&\
+	riscv32-unknown-elf-objcopy -O verilog ../02_test/test_assembly.o ../02_test/dump/mem.dump &&\
+	riscv32-unknown-elf-objdump -d ../02_test/test_assembly.o > ../02_test/output.asm &&\
 	make comp && make sim
