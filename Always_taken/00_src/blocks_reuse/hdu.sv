@@ -1,13 +1,12 @@
 module hdu (
-    input  logic EXMEM_pcsel, EXMEM_is_br, EXMEM_is_uncbr, 
-                 IDEX_rdwren, IDEX_mem_rden,     
+    input  logic IDEX_rdwren, IDEX_mem_rden, br_flush,   
     input  logic [4:0] IDEX_rd, IFID_rs1, IFID_rs2,
 
     output logic IFID_clear, IDEX_clear,
                  EXMEM_clear, IFID_wren, pc_wren  
 );
     always @(*) begin
-        if(EXMEM_pcsel && (EXMEM_is_br || EXMEM_is_uncbr)) begin
+        if(br_flush) begin
             IFID_clear  = 1'b1;
             IDEX_clear  = 1'b1;
             EXMEM_clear = 1'b1;

@@ -137,6 +137,7 @@ label_jump:
     jalr x30, x2, 0         # Jump to the address in x1 (which contains 15), save return address in x30
     li x31, 0xDEADBEE6      # Should be skipped
 
+
     # End of test
     j end_of_test
 

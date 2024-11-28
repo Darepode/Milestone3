@@ -1,6 +1,6 @@
 .PHONY: comp sim wave run
 
-TEST_NAME=test
+TEST_NAME=counter
 BENCH=always_taken
 
 comp:
@@ -10,7 +10,7 @@ sim:
 	vvp fwd_tb.vvp
 
 wave:
-	gtkwave fwd_tb.vcd
+	gtkwave always_taken_tb.vcd
 
 hex:
 	riscv32-unknown-elf-as -o ../02_test/test_assembly.o ../02_test/$(TEST_NAME).asm &&\

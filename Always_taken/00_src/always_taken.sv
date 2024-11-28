@@ -18,8 +18,12 @@ module always_taken (
 	// 					 o_sram_lb_n, o_sram_ub_o
 ); 
 
+localparam INDEX_WIDTH = 12;
+
 /*==============================   IF SIGNALS   ==============================*/
-    logic [31:0] IF_pc, IF_pcplus4, IF_instr, IF_pcnext;
+    logic [31:0] IF_pc, IF_pcplus4, IF_instr, IF_pcnext, IF_btb_rd_target;
+    logic        IF_btb_hit, IF_flush;
+    logic [1:0]  IF_PCnext_sel;
 
 /*==============================   ID SIGNALS   ==============================*/
     /* Control signal */
@@ -32,6 +36,7 @@ module always_taken (
     logic [4:0]  IFID_rs1, IFID_rs2, IFID_rd;
     logic [31:0] ID_rs1_data, ID_rs2_data, ID_imm;
     logic [2:0]  IFID_func3;
+    logic        IFID_btb_hit;
 
 /*==============================   EX SIGNALS   ==============================*/
     /* Control signal */
@@ -43,6 +48,7 @@ module always_taken (
     logic [31:0] IDEX_pc, IDEX_pcplus4, IDEX_rs1_data, IDEX_rs2_data, IDEX_imm;
     logic [2:0]  IDEX_func3;
     logic [4:0]  IDEX_rd, IDEX_rs1, IDEX_rs2;
+    logic        IDEX_btb_hit;
     logic [31:0] EX_alu_data, EX_br_addr;
     logic        EX_pcsel;
     logic [31:0] EX_alu_opa, EX_alu_opb, EX_br_base, EX_fwd_rs1_data, EX_fwd_rs2_data; 
@@ -53,8 +59,8 @@ module always_taken (
     logic [1:0] EXMEM_is_uncbr;
 
     /* Data signal */
-    logic [31:0] EXMEM_alu_data, EXMEM_br_addr, EXMEM_rs2_data;
-    logic        EXMEM_pcsel;
+    logic [31:0] EXMEM_alu_data, EXMEM_br_addr, EXMEM_rs2_data, EXMEM_pc, EXMEM_pcplus4;
+    logic        EXMEM_pcsel, EXMEM_btb_hit;
     logic [2:0]  EXMEM_func3;
     logic [4:0]  EXMEM_rd;
     logic [31:0] MEM_lsu_rdata;
@@ -85,6 +91,27 @@ module always_taken (
         .o_data(IF_instr)
     );
 
+    // Branch predictor
+    always_taken_predictor #(
+        .INDEX_WIDTH(INDEX_WIDTH)
+    ) inst_predictor (
+        .clk_i(i_clk),                            
+        .rst_i(i_rstn),                            
+        .IF_PC_tag_i(IF_pc[31:(INDEX_WIDTH+2)]),                      
+        .IF_btb_rd_index_i(IF_pc[(INDEX_WIDTH+1):2]),                
+        .EXMEM_btb_wr_index_i(EXMEM_pc[(INDEX_WIDTH+1):2]),             
+        .EXMEM_btb_wr_tag_i(EXMEM_pc[31:(INDEX_WIDTH+2)]),               
+        .EXMEM_btb_wr_target_i(EXMEM_br_addr),            
+        .EXMEM_btb_hit_i(EXMEM_btb_hit),                  
+        .EXMEM_br_decision_i(EXMEM_pcsel),              
+        .EXMEM_is_jmp_i(EXMEM_is_br | EXMEM_is_uncbr[1]),                   
+        .IF_btb_hit_o(IF_btb_hit),                     
+        .IF_PCnext_sel_o(IF_PCnext_sel),                  
+        .IF_btb_rd_target_o(IF_btb_rd_target),               
+        .IF_flush_o(IF_flush)                        
+    );
+
+
     //PC reg: async rstn, sync wren
     always @(posedge i_clk or negedge i_rstn) begin
         if (!i_rstn) IF_pc <= 32'h0000_0000;
@@ -98,7 +125,9 @@ module always_taken (
     assign IF_pcplus4 = IF_pc + 32'h4;
 
     //next PC select mux
-    assign IF_pcnext = (!EXMEM_pcsel) ? IF_pcplus4 : EXMEM_br_addr;
+    assign IF_pcnext = (IF_PCnext_sel == 2'b00) ? IF_pcplus4 :
+                       (IF_PCnext_sel == 2'b01) ? EXMEM_pcplus4 :
+                       (IF_PCnext_sel == 2'b10) ? IF_btb_rd_target : EXMEM_br_addr;
 
     // IFID pipeline register:
     always @(posedge i_clk or negedge i_rstn) begin
@@ -106,17 +135,20 @@ module always_taken (
             IFID_pc      <= 32'h0000_0000;
             IFID_pcplus4 <= 32'h0000_0000;
             IFID_instr   <= 32'h0000_0000;
+            IFID_btb_hit <= 1'b0;
         end
         else begin
             if (IFIDreg_clr) begin
                 IFID_pc      <= 32'h0000_0000;
                 IFID_pcplus4 <= 32'h0000_0000;
                 IFID_instr   <= 32'h0000_0000;
+                IFID_btb_hit <= 1'b0;
             end else begin
                 if (IFIDreg_wren) begin
                     IFID_pc      <= IF_pc;
                     IFID_pcplus4 <= IF_pcplus4;
                     IFID_instr   <= IF_instr;
+                    IFID_btb_hit <= IF_btb_hit;
                 end
             end       
         end        
@@ -173,8 +205,7 @@ always @(posedge i_clk or negedge i_rstn) begin
             IDEX_alu_op   <= 4'b0000;
             IDEX_mem_wren <= 1'b0;
             IDEX_mem_rden <= 1'b0;
-            IDEX_wb_sel   <= 1'b0;
-            
+            IDEX_wb_sel   <= 1'b0;   
 
             //Data signals
             IDEX_pc       <= 32'h0000_0000;
@@ -186,6 +217,7 @@ always @(posedge i_clk or negedge i_rstn) begin
             IDEX_rd       <= 5'b0_0000;
             IDEX_rs1      <= 5'b0;
             IDEX_rs2      <= 5'b0;
+            IDEX_btb_hit  <= 1'b0;
         end
         else begin
             if (IDEXreg_clr) begin
@@ -211,6 +243,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 IDEX_rd       <= 5'b0_0000;
                 IDEX_rs1      <= 5'b0;
                 IDEX_rs2      <= 5'b0;
+                IDEX_btb_hit  <= 1'b0;
             end
             else begin
                 //Control signals
@@ -235,6 +268,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 IDEX_rd       <= IFID_rd;
                 IDEX_rs1      <= IFID_rs1;
                 IDEX_rs2      <= IFID_rs2;
+                IDEX_btb_hit  <= IFID_btb_hit;
                 
             end
         end        
@@ -289,6 +323,9 @@ always @(posedge i_clk or negedge i_rstn) begin
             EXMEM_pcsel    <= 1'b0;
             EXMEM_func3    <= 3'b000;
             EXMEM_rd       <= 5'b0_0000;
+            EXMEM_btb_hit  <= 1'b0;
+            EXMEM_pc       <= 32'h0000_0000;
+            EXMEM_pcplus4  <= 32'h0000_0000;
         end
         else begin
             if (EXMEMreg_clr) begin
@@ -308,6 +345,9 @@ always @(posedge i_clk or negedge i_rstn) begin
                 EXMEM_pcsel    <= 1'b0;
                 EXMEM_func3    <= 3'b000;
                 EXMEM_rd       <= 5'b0_0000;
+                EXMEM_btb_hit  <= 1'b0;
+                EXMEM_pc       <= 32'h0000_0000;
+                EXMEM_pcplus4  <= 32'h0000_0000;
             end
             else begin
                 //Control signals
@@ -326,6 +366,9 @@ always @(posedge i_clk or negedge i_rstn) begin
                 EXMEM_pcsel    <= EX_pcsel;
                 EXMEM_func3    <= IDEX_func3;
                 EXMEM_rd       <= IDEX_rd;
+                EXMEM_btb_hit  <= IDEX_btb_hit;
+                EXMEM_pc       <= IDEX_pc;
+                EXMEM_pcplus4  <= IDEX_pcplus4;
             end
         end        
 end
@@ -387,9 +430,7 @@ assign o_insn_vld = MEMWB_insn_vld;
 
 /*==============================      HDU     ==============================*/
 hdu inst_hdu (
-    .EXMEM_pcsel    (EXMEM_pcsel),  
-    .EXMEM_is_br    (EXMEM_is_br),  
-    .EXMEM_is_uncbr (EXMEM_is_uncbr[1]),
+    .br_flush       (IF_flush),
     .IDEX_rdwren    (IDEX_rd_wren),
     .IDEX_mem_rden  (IDEX_mem_rden),
     .IDEX_rd        (IDEX_rd),           

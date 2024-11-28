@@ -11,6 +11,8 @@
 ../00_src/blocks_reuse/sra.sv
 ../00_src/blocks_reuse/srl.sv
 ../00_src/blocks_reuse/fwd_unit.sv
+../00_src/btb.sv
+../00_src/always_taken_predictor.sv
 ../00_src/always_taken.sv
 
 ../01_bench/always_taken_tb.sv
