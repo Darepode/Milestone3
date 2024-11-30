@@ -95,20 +95,22 @@ localparam INDEX_WIDTH = 12;
     always_taken_predictor #(
         .INDEX_WIDTH(INDEX_WIDTH)
     ) inst_predictor (
-        .clk_i(i_clk),                            
-        .rst_i(i_rstn),                            
-        .IF_PC_tag_i(IF_pc[31:(INDEX_WIDTH+2)]),                      
-        .IF_btb_rd_index_i(IF_pc[(INDEX_WIDTH+1):2]),                
-        .EXMEM_btb_wr_index_i(EXMEM_pc[(INDEX_WIDTH+1):2]),             
-        .EXMEM_btb_wr_tag_i(EXMEM_pc[31:(INDEX_WIDTH+2)]),               
-        .EXMEM_btb_wr_target_i(EXMEM_br_addr),            
-        .EXMEM_btb_hit_i(EXMEM_btb_hit),                  
-        .EXMEM_br_decision_i(EXMEM_pcsel),              
-        .EXMEM_is_jmp_i(EXMEM_is_br | EXMEM_is_uncbr[1]),                   
-        .IF_btb_hit_o(IF_btb_hit),                     
-        .IF_PCnext_sel_o(IF_PCnext_sel),                  
-        .IF_btb_rd_target_o(IF_btb_rd_target),               
-        .IF_flush_o(IF_flush)                        
+        .clk_i                 (i_clk),                            
+        .rst_i                 (i_rstn),                            
+        .IF_PC_tag_i           (IF_pc[31:(INDEX_WIDTH+2)]),                      
+        .IF_btb_rd_index_i     (IF_pc[(INDEX_WIDTH+1):2]),                
+        .EXMEM_btb_wr_index_i  (EXMEM_pc[(INDEX_WIDTH+1):2]),             
+        .EXMEM_btb_wr_tag_i    (EXMEM_pc[31:(INDEX_WIDTH+2)]),               
+        .EXMEM_btb_wr_target_i (EXMEM_br_addr),            
+        .EXMEM_btb_hit_i       (EXMEM_btb_hit),                  
+        .EXMEM_br_decision_i   (EXMEM_pcsel),              
+        //.EXMEM_is_jmp_i        (EXMEM_is_br || (EXMEM_is_uncbr==2'b10)),
+        .EXMEM_is_br_i         (EXMEM_is_br),
+        .EXMEM_is_uncbr_i      (EXMEM_is_uncbr),                   
+        .IF_btb_hit_o          (IF_btb_hit),                     
+        .IF_PCnext_sel_o       (IF_PCnext_sel),                  
+        .IF_btb_rd_target_o    (IF_btb_rd_target),               
+        .IF_flush_o            (IF_flush)                        
     );
 
 

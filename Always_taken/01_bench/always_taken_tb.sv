@@ -148,10 +148,10 @@ always_taken always_taken_inst (
     //     end
     // end
 
-    // initial begin
-    //     #100
-    //     $finish();
-    // end 
+    initial begin
+        #10000
+        $finish();
+    end 
 
     // Wave dump
     initial begin
