@@ -14,6 +14,8 @@
 ../00_src/btb.sv
 ../00_src/pht.sv
 ../00_src/two_bit_predictor.sv
-../00_src/two_bit.sv
+../00_src/two_bit_sram.sv
+../00_src/sram_controller.sv
+../00_src/ctrl_fsm.sv
 
-../01_bench/two_bit_tb.sv
+../01_bench/two_bit_sram_tb.sv
