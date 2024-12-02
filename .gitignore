@@ -6,4 +6,9 @@ Forwarding/10_sim/Out_Mem_after.data
 Forwarding/10_sim/In_Mem_after.data
 Always_taken/10_sim/always_taken_tb.vcd
 Always_taken/10_sim/fwd_tb.vvp
+Two_Bit_Predict/10_sim/two_bit_tb.vcd
+Two_Bit_Predict/10_sim/two_bit_tb.vvp
+Two_Bit_Predict/10_sim/In_Mem_after.data
+Two_Bit_Predict/10_sim/Out_Mem_after.data
+Two_Bit_Predict/10_sim/Mem_after.data
 
