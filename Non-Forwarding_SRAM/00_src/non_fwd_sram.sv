@@ -1,4 +1,4 @@
-module non_fwd (
+module non_fwd_sram (
     input  logic        i_clk,      // Global clock, active on the rising edge
     input  logic        i_rstn,     // Global low active reset
     input  logic [31:0] i_io_sw,    // Input for switches
@@ -8,14 +8,14 @@ module non_fwd (
     output logic [31:0] o_io_ledr,  // Output for driving red LEDs
     output logic [31:0] o_io_ledg,  // Output for driving green LEDs
     output logic [6:0]  o_io_hex0, o_io_hex1, o_io_hex2, o_io_hex3, o_io_hex4, o_io_hex5, o_io_hex6, o_io_hex7,   // Output for driving 7-segment LED displays
-    output logic [31:0] o_io_lcd    // Output for driving the LCD register
+    output logic [31:0] o_io_lcd,    // Output for driving the LCD register
 	 
-	 // output to SRAM
-	//  input  logic        i_sram_oe_n,
-	//  output logic [17:0] o_sram_addr,
-	//  inout  wire  [15:0] io_sram_dq,
-	//  output logic        o_sram_ce_n, o_sram_we_n,
-	// 					 o_sram_lb_n, o_sram_ub_o
+	//  output to SRAM
+	 input  logic        i_sram_oe_n,
+	 output logic [17:0] o_sram_addr,
+	 inout  wire  [15:0] io_sram_dq,
+	 output logic        o_sram_ce_n, o_sram_we_n,
+						 o_sram_lb_n, o_sram_ub_o
 ); 
 
 /*==============================   IF SIGNALS   ==============================*/
@@ -69,8 +69,13 @@ module non_fwd (
     logic [31:0] WB_rd_data;
 
 /*==============================   HDU SIGNALS   ==============================*/
-    logic pc_wren, IFIDreg_clr, IFIDreg_wren, IDEXreg_clr, EXMEMreg_clr;
+    logic pc_wren, IFIDreg_clr, IDEXreg_clr, EXMEMreg_clr;
+    logic IFIDreg_wren, IDEXreg_wren, EXMEMreg_wren, MEMWBreg_wren;
 
+/*==============================     SRAM SIGNALS     ==============================*/
+    logic true_mem_rden, true_mem_wren;
+    logic cs0, mem_ack;
+    logic mem_ctrl_mux, sram_stall;
 
 
 /*================================================================================================================*/
@@ -207,6 +212,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 IDEX_rd       <= 5'b0_0000;
             end
             else begin
+                if(IDEXreg_wren) begin
                 //Control signals
                 IDEX_insn_vld <= ID_insn_vld;
                 IDEX_is_br    <= ID_is_br;
@@ -227,7 +233,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 IDEX_imm      <= ID_imm;
                 IDEX_func3    <= IFID_func3;
                 IDEX_rd       <= IFID_rd;
-                
+                end
             end
         end        
     end
@@ -296,6 +302,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 EXMEM_rd       <= 5'b0_0000;
             end
             else begin
+                if(EXMEMreg_wren) begin
                 //Control signals
                 EXMEM_insn_vld <= IDEX_insn_vld;
                 EXMEM_is_br    <= IDEX_is_br;
@@ -312,6 +319,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 EXMEM_pcsel    <= EX_pcsel;
                 EXMEM_func3    <= IDEX_func3;
                 EXMEM_rd       <= IDEX_rd;
+                end
             end
         end        
 end
@@ -320,8 +328,8 @@ end
 lsu inst_lsu (
     .i_clk      (i_clk),      
     .i_rst_n    (i_rstn),    
-    .i_lsu_wren (EXMEM_mem_wren), 
-    //.i_lsu_rden (EXMEM_mem_rden), 
+    .i_lsu_wren (true_mem_wren), 
+    .i_lsu_rden (true_mem_rden), 
     .i_func3    (EXMEM_func3),    
     .i_st_data  (EXMEM_rs2_data),  
     .i_io_sw    (i_io_sw),    
@@ -338,7 +346,17 @@ lsu inst_lsu (
     .o_io_hex4  (o_io_hex4),    
     .o_io_hex5  (o_io_hex5),    
     .o_io_hex6  (o_io_hex6),    
-    .o_io_hex7  (o_io_hex7)      
+    .o_io_hex7  (o_io_hex7),
+
+    .o_cs0        (cs0),
+	.o_ack        (mem_ack),
+	.o_sram_addr  (o_sram_addr),
+	.io_sram_dq   (io_sram_dq),
+	.o_sram_ce_n  (o_sram_ce_n),
+	.o_sram_we_n  (o_sram_we_n),
+	.o_sram_lb_n  (o_sram_lb_n),
+	.o_sram_ub_o  (o_sram_ub_o),
+	.i_sram_oe_n  (i_sram_oe_n)        
 );
 
 //MEMWB pipeline register: async rstn
@@ -355,6 +373,7 @@ always @(posedge i_clk or negedge i_rstn) begin
             MEMWB_rd        <= 5'b0_0000;
         end
         else begin
+            if(MEMWBreg_wren) begin 
             //Control signals
             MEMWB_insn_vld <= EXMEM_insn_vld;
             MEMWB_rd_wren  <= EXMEM_rd_wren;
@@ -364,8 +383,34 @@ always @(posedge i_clk or negedge i_rstn) begin
             MEMWB_alu_data  <= EXMEM_alu_data;
             MEMWB_lsu_rdata <= MEM_lsu_rdata;
             MEMWB_rd        <= EXMEM_rd;
+            end
         end
 end
+
+// SRAM
+always @(*) begin
+	case (mem_ctrl_mux)
+		1'b0: begin
+			true_mem_rden = EXMEM_mem_rden;
+			true_mem_wren = EXMEM_mem_wren;
+		end
+		1'b1: begin
+			true_mem_rden = 1'b0;
+			true_mem_wren = 1'b0;
+		end
+	endcase
+end
+
+ctrl_fsm ctrl_fsm_inst (
+	.clk          (i_clk),
+	.rstn         (i_rstn),
+	.rden         (EXMEM_mem_rden), 
+	.wren         (EXMEM_mem_wren),
+	.cs0          (cs0),
+	.ack          (mem_ack),
+	.mem_ctrl_mux (mem_ctrl_mux),
+	.sram_stall   (sram_stall)
+);
 
 /*==============================   WB STAGE   ==============================*/
 assign WB_rd_data = (!MEMWB_wb_sel) ? MEMWB_alu_data : MEMWB_lsu_rdata;
@@ -383,10 +428,16 @@ hdu inst_hdu (
     .IFID_rs1       (IFID_rs1),     
     .IFID_rs2       (IFID_rs2),     
     .IFID_clear     (IFIDreg_clr),   
-    .IFID_wren      (IFIDreg_wren),    
+
+    .IFID_wren      (IFIDreg_wren),
+    .IDEX_wren      (IDEXreg_wren),
+    .EXMEM_wren     (EXMEMreg_wren),
+    .MEMWB_wren     (MEMWBreg_wren),
+
     .IDEX_clear     (IDEXreg_clr),   
     .EXMEM_clear    (EXMEMreg_clr),  
-    .pc_wren        (pc_wren)       
+    .pc_wren        (pc_wren),
+    .sram_stall     (sram_stall)      
 );
 
 

@@ -1,7 +1,7 @@
 module ctrl_fsm (
-	input logic clk, rstn,
-	input logic  rden, wren, cs0, ack,
-	output logic PC_wren, mem_ctrl_mux, reg_ctrl_mux
+	input  logic clk, rstn,
+	input  logic rden, wren, cs0, ack,
+	output logic mem_ctrl_mux, sram_stall
 	//output state_out
 );
 
@@ -28,13 +28,11 @@ module ctrl_fsm (
 				mem_ctrl_mux = 1'b0;
 				if (!stall_cond) begin
 					next_state = PROCESS;
-					PC_wren = 1'b1;
-					reg_ctrl_mux = 1'b0;
+					sram_stall = 1'b0;
 				end else begin
 					if (stall_cond) begin
 						next_state = STALL;
-						PC_wren = 1'b0;
-						reg_ctrl_mux = 1'b1;
+				      	sram_stall = 1'b1;
 					end
 				end
 			end
@@ -42,13 +40,11 @@ module ctrl_fsm (
 				mem_ctrl_mux = 1'b1;
 				if (!ack) begin
 					next_state = STALL;
-					PC_wren = 1'b0;
-					reg_ctrl_mux = 1'b1;
+					sram_stall = 1'b1;
 				end else begin
 					if (ack) begin
 						next_state = PROCESS;
-						PC_wren = 1'b1;
-						reg_ctrl_mux = 1'b0;
+						sram_stall = 1'b0;
 					end
 				end
 			end

@@ -1,5 +1,5 @@
 module lsu (
-    input             i_clk, i_rst_n, i_lsu_wren, //i_l_unsigned,
+    input             i_clk, i_rst_n, i_lsu_wren,  i_lsu_rden, //i_l_unsigned,
     // input  [1:0]      i_s_length, 
     // input  [2:0]      i_l_length,
     input      [2:0]  i_func3,       
@@ -7,7 +7,14 @@ module lsu (
     output reg [31:0] o_ld_data, o_io_lcd, o_io_ledg, o_io_ledr,
                        
     output reg [6:0]  o_io_hex0, o_io_hex1, o_io_hex2, o_io_hex3,
-                      o_io_hex4, o_io_hex5, o_io_hex6, o_io_hex7
+                      o_io_hex4, o_io_hex5, o_io_hex6, o_io_hex7,
+
+    output            o_cs0, o_ack,  					 
+	output    [17:0]  o_sram_addr, 
+	inout     [15:0]  io_sram_dq,
+	input             i_sram_oe_n,
+	output            o_sram_ce_n, o_sram_we_n,
+					  o_sram_lb_n, o_sram_ub_o
 );
 
     reg  [2:0]  cs;
@@ -16,6 +23,30 @@ module lsu (
     wire [4:0]  input_mem_addr;
     wire [5:0]  output_mem_addr;
     wire [31:0] data_mem_out, output_mem_out, input_mem_out;
+
+    assign o_cs0 = cs[0];
+
+    sram_controller sram_controller_inst (
+    .i_ADDR     ({{5{1'b0}}, data_mem_addr[12:2], {2{1'b0}}}),
+    .i_WDATA    (i_st_data), 
+    .i_BMASK    (4'b1111), 
+    .i_WREN     (cs[0] & i_lsu_wren), 
+    .i_RDEN     (cs[0] & i_lsu_rden), 
+    .o_RDATA    (data_mem_out), 
+    .o_ACK      (o_ack),
+	 
+    .SRAM_ADDR  (o_sram_addr), 
+    .SRAM_DQ    (io_sram_dq), 
+    .SRAM_CE_N  (o_sram_ce_n), 
+    .SRAM_WE_N  (o_sram_we_n), 
+    .SRAM_LB_N  (o_sram_lb_n), 
+    .SRAM_UB_N  (o_sram_ub_o), 
+    .SRAM_OE_N  (i_sram_oe_n), 
+	 
+    .i_clk      (i_clk), 
+    .i_reset    (i_rst_n)
+	 //.sram_state_q_out (sram_state_q_out)
+);
 
     wire i_l_unsigned;
     wire [1:0] i_s_length;
@@ -27,7 +58,7 @@ module lsu (
 
 
     // Declare memory space
-    reg [7:0] data_mem[0:8191];
+    //reg [7:0] data_mem[0:8191];
     reg [7:0] input_mem[0:31];
     reg [7:0] output_mem[0:63];
 
@@ -87,7 +118,7 @@ module lsu (
 
     /////////////////////////////////////////
     // Load-Store for data_mem
-    always @(posedge i_clk or negedge i_rst_n) begin
+    /*always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
             for (integer i = 0; i < 8192; i = i+1) data_mem[i] <= 8'h00;
         end else begin
@@ -104,7 +135,7 @@ module lsu (
         end
     end
     // Output of data_mem
-    assign data_mem_out = {data_mem[data_mem_addr+13'h3], data_mem[data_mem_addr+13'h2], data_mem[data_mem_addr+13'h1], data_mem[data_mem_addr]};
+    assign data_mem_out = {data_mem[data_mem_addr+13'h3], data_mem[data_mem_addr+13'h2], data_mem[data_mem_addr+13'h1], data_mem[data_mem_addr]};*/
     
     
     /////////////////////////////////////////

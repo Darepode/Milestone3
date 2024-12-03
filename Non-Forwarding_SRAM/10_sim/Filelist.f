@@ -10,9 +10,12 @@
 ../00_src/blocks_reuse/sll.sv
 ../00_src/blocks_reuse/sra.sv
 ../00_src/blocks_reuse/srl.sv
-../00_src/non_fwd.sv
+../00_src/blocks_reuse/sram_controller.sv
+../00_src/blocks_reuse/ctrl_fsm.sv
+../00_src/non_fwd_sram.sv
 
-../01_bench/non_fwd_tb.sv
+
+../01_bench/non_fwd_sram_tb.sv
 
 
 // ../01_bench/singlecycle_tb.sv

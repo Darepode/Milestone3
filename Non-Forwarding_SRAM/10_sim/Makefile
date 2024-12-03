@@ -1,16 +1,16 @@
 .PHONY: comp sim wave run
 
 TEST_NAME=test
-BENCH=non_fwd
+BENCH=non_fwd_sram
 
 comp:
-	iverilog -g2012 -s $(BENCH)_tb -o non_fwd_tb.vvp -c Filelist.f
+	iverilog -g2012 -s $(BENCH)_tb -o non_fwd_sram_tb.vvp -c Filelist.f
 
 sim:
-	vvp non_fwd_tb.vvp
+	vvp non_fwd_sram_tb.vvp
 
 wave:
-	gtkwave non_fwd_tb.vcd
+	gtkwave non_fwd_sram_tb.vcd
 
 hex:
 	riscv32-unknown-elf-as -o ../02_test/test_assembly.o ../02_test/$(TEST_NAME).asm &&\

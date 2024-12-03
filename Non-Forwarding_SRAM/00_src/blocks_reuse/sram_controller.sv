@@ -16,7 +16,7 @@
  * Author: Hai Cao - cxhai.sdh221@hcmut.edu.vn
  */
 
-module sram (
+module sram_controller (
   input  logic [17:0]   i_ADDR   ,
   input  logic [31:0]   i_WDATA  ,
   input  logic [ 3:0]   i_BMASK  ,
@@ -182,4 +182,4 @@ module sram (
   assign o_RDATA = rdata_q;
   assign o_ACK  = (sram_state_q == StWriteAck) || (sram_state_q == StReadAck);
 
-endmodule : sram
+endmodule : sram_controller
