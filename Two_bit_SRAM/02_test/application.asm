@@ -4,8 +4,11 @@
 _start:
 
     addi x0, x0, 0
-    addi x0, x0, 0
-    addi x0, x0, 0
+
+    li x8, 0x7010
+    li x9, 0x000000FF
+    sw x9, 0(x8)
+
 #---------------------------------------------------------------------------
 # Using x2 x3 x4 x5 x6 x7
 power_reset_lcd:
@@ -67,7 +70,7 @@ init_lcd:
     jal  x1, out_lcd         # Write to LCD
     li   x3, 624             # Delay 100us
     jal  x1, delay
-
+ 
     j    init_prog
 
 #---------------------------------------------------------------------------
@@ -202,6 +205,7 @@ movecur:
     jalr x0, x14, 0
 #--------------------------------------------------------------------
 init_prog:
+    
     li x3,  10 # check value
     li x4,  10 # check value
     li x7,  6 

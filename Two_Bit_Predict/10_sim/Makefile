@@ -1,6 +1,6 @@
 .PHONY: comp sim wave run
 
-TEST_NAME=counter
+TEST_NAME=application
 BENCH=two_bit
 
 comp:

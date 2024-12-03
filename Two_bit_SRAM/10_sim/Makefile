@@ -1,6 +1,6 @@
 .PHONY: comp sim wave run
 
-TEST_NAME=SRAM
+TEST_NAME=application
 BENCH=two_bit_sram
 
 comp:
