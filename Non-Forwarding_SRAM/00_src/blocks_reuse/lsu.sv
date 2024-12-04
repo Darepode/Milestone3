@@ -12,7 +12,7 @@ module lsu (
     output            o_cs0, o_ack,  					 
 	output    [17:0]  o_sram_addr, 
 	inout     [15:0]  io_sram_dq,
-	input             i_sram_oe_n,
+	output             i_sram_oe_n,
 	output            o_sram_ce_n, o_sram_we_n,
 					  o_sram_lb_n, o_sram_ub_o
 );

@@ -20,6 +20,15 @@ module non_fwd_sram_tb ();
     logic [6:0]  o_io_hex7;
     logic [31:0] o_io_lcd;
 
+    logic i_sram_oe_n;           // SRAM Output Enable (Active low)
+    logic [17:0] o_sram_addr;    // SRAM Address bus (18-bits)
+    wire [15:0] io_sram_dq;     // SRAM Data bus (16-bits)
+    logic o_sram_ce_n;           // SRAM Chip Enable (Active low)
+    logic o_sram_we_n;           // SRAM Write Enable (Active low)
+    logic o_sram_lb_n;           // SRAM Lower Byte Enable (Active low)
+    logic o_sram_ub_o;           // SRAM Upper Byte Enable (Active low)
+
+
     logic [31:0] reg0;
     logic [31:0] reg1;
     logic [31:0] reg2;
@@ -108,13 +117,36 @@ non_fwd_sram non_fwd_sram_inst (
     .o_io_hex5  (o_io_hex5),
     .o_io_hex6  (o_io_hex6),
     .o_io_hex7  (o_io_hex7),
-    .o_io_lcd   (o_io_lcd)
+    .o_io_lcd   (o_io_lcd),
+
+    .i_sram_oe_n      (i_sram_oe_n),
+    .o_sram_addr      (o_sram_addr),
+    .io_sram_dq       (io_sram_dq),
+    .o_sram_ce_n      (o_sram_ce_n),
+    .o_sram_we_n      (o_sram_we_n),
+    .o_sram_lb_n      (o_sram_lb_n),
+    .o_sram_ub_o      (o_sram_ub_o) 
 );
+
+// Instantiate the simulated SRAM
+ SRAM_model sram_inst (
+        .clk(i_clk),                // Clock signal
+        .reset_n(i_rst_n),        // Active-low reset signal
+        .i_sram_addr(o_sram_addr), // Address input
+        .o_sram_oe_n(i_sram_oe_n), // Output enable (active-low)
+        .i_sram_we_n(o_sram_we_n), // Write enable (active-low)
+        .i_sram_ce_n(o_sram_ce_n), // Chip enable (active-low)
+        .i_sram_lb_n(o_sram_lb_n), // Lower byte enable (active-low)
+        .i_sram_ub_n(o_sram_ub_o), // Upper byte enable (active-low)
+        .io_sram_dq(io_sram_dq)   // Bidirectional data bus
+    );
+
+
 
     // Clock gen
     initial begin
         i_clk = 0;
-        forever #5 i_clk = ~i_clk;
+        forever #1 i_clk = ~i_clk;
     end
 
     // Reset gen
@@ -147,6 +179,11 @@ non_fwd_sram non_fwd_sram_inst (
     //        end
     //     end
     // end
+    initial begin
+        #100000
+        $display("%h", sram_inst.sram_memory[16'h100]);
+        $finish();
+    end 
 
     // Wave dump
     initial begin

@@ -1,6 +1,6 @@
 .PHONY: comp sim wave run
 
-TEST_NAME=test
+TEST_NAME=SRAM
 BENCH=non_fwd_sram
 
 comp:

@@ -12,6 +12,7 @@
 ../00_src/blocks_reuse/srl.sv
 ../00_src/blocks_reuse/sram_controller.sv
 ../00_src/blocks_reuse/ctrl_fsm.sv
+../00_src/SRAM_model.sv
 ../00_src/non_fwd_sram.sv
 
 
