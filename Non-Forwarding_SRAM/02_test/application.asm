@@ -3,13 +3,16 @@
 
 _start:
 
-    addi x0, x0, 0
-    addi x0, x0, 0
-    addi x0, x0, 0
-
-    li x2, 0x7010
-    li x3, 0x000000FF
-    sw x3, 0(x2)
+    # addi x0, x0, 0
+    # addi x0, x0, 0
+    # addi x0, x0, 0
+    
+    
+    # li   x3, 0x7000
+    # li   x4, 0x000003FF
+    # sw   x4, 0(x3)
+    # li   x3,  10 # check value
+    # li   x4,  10 # check value
 #---------------------------------------------------------------------------
 # Using x2 x3 x4 x5 x6 x7
 power_reset_lcd:
@@ -17,25 +20,25 @@ power_reset_lcd:
     li   x2, 0x7030          # Address of LCD
     li   x3, 0xC0000000      # Turn on LCD and Backlight
     sw   x3, 0(x2)
-    li   x3, 5 #124999          # Delay 20ms
+    li   x3, 124999          # Delay 20ms
     jal  x1, delay
 
     li   x4, 0               # Write command RS = 0
     li   x3, 0x30            # Command content
     jal  x1, out_lcd         # Write to LCD
-    li   x3, 5 #26249           # Delay 4.2ms
+    li   x3, 26249           # Delay 4.2ms
     jal  x1, delay
 
     li   x4, 0               # Write command RS = 0
     li   x3, 0x30            # Command content
     jal  x1, out_lcd         # Write to LCD
-    li   x3, 5 #12499           # Delay 200us
+    li   x3, 12499           # Delay 200us
     jal  x1, delay
 
     li   x4, 0               # Write command RS = 0
     li   x3, 0x30            # Command content
     jal  x1, out_lcd         # Write to LCD
-    li   x3, 5 #12499           # Delay 200us
+    li   x3, 12499           # Delay 200us
     jal  x1, delay
 
 #---------------------------------------------------------------------------
@@ -45,31 +48,31 @@ init_lcd:
     li   x4, 0               # Write command RS = 0
     li   x3, 0x38            # Command content
     jal  x1, out_lcd         # Write to LCD
-    li   x3, 5 #624             # Delay 100us
+    li   x3, 624             # Delay 100us
     jal  x1, delay
 
     li   x4, 0               # Write command RS = 0
     li   x3, 0x01            # Command content
     jal  x1, out_lcd         # Write to LCD
-    li   x3, 5 #12499           # Delay 2ms
+    li   x3, 12499           # Delay 2ms
     jal  x1, delay
 
     li   x4, 0               # Write command RS = 0
     li   x3, 0x0C            # Command content
     jal  x1, out_lcd         # Write to LCD
-    li   x3, 5 #624             # Delay 100us
+    li   x3, 624             # Delay 100us
     jal  x1, delay
 
     li   x4, 0               # Write command RS = 0
     li   x3, 0x06            # Command content
     jal  x1, out_lcd         # Write to LCD
-    li   x3, 5 #624             # Delay 100us
+    li   x3, 624             # Delay 100us
     jal  x1, delay
 
     li   x4, 0               # Write command RS = 0
     li   x3, 0x82            # Command content
     jal  x1, out_lcd         # Write to LCD
-    li   x3, 5 #624             # Delay 100us
+    li   x3, 624             # Delay 100us
     jal  x1, delay
 
     j    init_prog
@@ -416,6 +419,12 @@ init_start:
     addi x13, x13, 1
     j    P_WAIT
 run:
+    # li   x3, 0x7010
+    # li   x4, 0x000003FF
+    # sw   x4, 0(x3)
+    # li   x3,  10 # check value
+    # li   x4,  10 # check value
+
     jalr x0, x14, 0
 #------------------------------------------------------------------------------------------
 reset:

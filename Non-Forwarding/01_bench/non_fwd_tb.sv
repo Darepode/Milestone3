@@ -132,6 +132,29 @@ non_fwd non_fwd_inst (
         end
     end
 
+    initial begin
+        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
+        #25000
+        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b0111;
+        #10000
+        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
+        #50000
+
+
+        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b0111;
+        #10000
+        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
+        #50000
+
+
+        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1101;
+        #10000
+        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
+
+        #100000
+        $finish();
+    end 
+
     // // Wave dump
     // initial begin
     //     $dumpfile("non_fwd_tb.vcd");

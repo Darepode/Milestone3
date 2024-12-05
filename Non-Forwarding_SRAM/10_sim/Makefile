@@ -1,6 +1,6 @@
 .PHONY: comp sim wave run
 
-TEST_NAME=SRAM
+TEST_NAME=application
 BENCH=non_fwd_sram
 
 comp:
@@ -17,7 +17,7 @@ hex:
 	riscv32-unknown-elf-objcopy -O verilog ../02_test/test_assembly.o ../02_test/dump/mem.dump &&\
 	riscv32-unknown-elf-objdump -d ../02_test/test_assembly.o > ../02_test/output.asm &&\
     (cd ../02_test/dump && python3 imem_file_gen.py) &&\
-	cp /home/datpham/CTMT/Milestone3/Non-Forwarding/02_test/dump/mem_padded.dump /mnt/d/CTMT/MileStone3_NonFwd/02_test
+	cp /home/datpham/CTMT/Milestone3/Non-Forwarding_SRAM/02_test/dump/mem_padded.dump /mnt/d/CTMT/MileStone3_NonFwd_SRAM/02_test/dump
 run:
 	make hex && make comp && make sim
 

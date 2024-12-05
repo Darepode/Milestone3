@@ -99,7 +99,7 @@ module lsu (
             3'b001:  ld_temp_data = data_mem_out;
             3'b010:  ld_temp_data = output_mem_out;
             3'b100:  ld_temp_data = input_mem_out;
-            default: ld_temp_data = ld_temp_data;
+            default: ld_temp_data = 32'h0000_0000;
         endcase
     end
 

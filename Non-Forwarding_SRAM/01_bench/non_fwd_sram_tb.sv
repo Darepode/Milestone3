@@ -180,6 +180,11 @@ non_fwd_sram non_fwd_sram_inst (
     //     end
     // end
     initial begin
+        force non_fwd_sram_tb.non_fwd_sram_inst.i_io_btn = 4'b1111;
+        #25000
+        force non_fwd_sram_tb.non_fwd_sram_inst.i_io_btn = 4'b0111;
+        #1000
+        force non_fwd_sram_tb.non_fwd_sram_inst.i_io_btn = 4'b1111;
         #100000
         $display("%h", sram_inst.sram_memory[16'h100]);
         $finish();
@@ -205,7 +210,7 @@ non_fwd_sram non_fwd_sram_inst (
     // // $readmemh("../02_test/mem.dump", singlecycle_tb.singlecycle_inst.imem_inst.instr_mem);
     // // $display("FINISH init mem");
 
-    // #10; force singlecycle_tb.singlecycle_inst.i_io_btn = 4'b1000;
+     
     // #500; force singlecycle_tb.singlecycle_inst.i_io_btn = 4'b0000;
     // // #20; release singlecycle_tb.singlecycle_inst.i_io_sw;
     // end

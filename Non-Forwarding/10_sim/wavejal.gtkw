@@ -1,0 +1,79 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Tue Dec  3 23:27:17 2024
+[*]
+[dumpfile] "/home/datpham/CTMT/Milestone3/Non-Forwarding/10_sim/non_fwd_tb.vcd"
+[dumpfile_mtime] "Tue Dec  3 14:29:19 2024"
+[dumpfile_size] 187632
+[savefile] "/home/datpham/CTMT/Milestone3/Non-Forwarding/10_sim/wavejal.gtkw"
+[timestart] 1590700
+[size] 1920 985
+[pos] -1 -1
+*-15.000000 1678800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] non_fwd_tb.
+[sst_width] 297
+[signals_width] 182
+[sst_expanded] 1
+[sst_vpaned_height] 292
+@28
+non_fwd_tb.i_clk
+non_fwd_tb.i_rst_n
+@22
+non_fwd_tb.non_fwd_inst.IF_pcnext[31:0]
+non_fwd_tb.non_fwd_inst.IF_pc[31:0]
+non_fwd_tb.non_fwd_inst.IF_instr[31:0]
+@28
+non_fwd_tb.non_fwd_inst.EXMEM_is_uncbr[1:0]
+@22
+non_fwd_tb.non_fwd_inst.IFID_pc[31:0]
+non_fwd_tb.non_fwd_inst.IDEX_pc[31:0]
+non_fwd_tb.non_fwd_inst.EX_alu_data[31:0]
+non_fwd_tb.non_fwd_inst.EX_br_addr[31:0]
+@28
+non_fwd_tb.non_fwd_inst.EX_pcsel
+@29
+non_fwd_tb.non_fwd_inst.EXMEM_pcsel
+@22
+non_fwd_tb.non_fwd_inst.EXMEM_br_addr[31:0]
+@28
+non_fwd_tb.non_fwd_inst.pc_wren
+@24
+non_fwd_tb.non_fwd_inst.IDEX_rd[4:0]
+@28
+non_fwd_tb.non_fwd_inst.IDEX_rd_wren
+non_fwd_tb.non_fwd_inst.ID_is_uncbr[1:0]
+@22
+non_fwd_tb.reg0[31:0]
+non_fwd_tb.reg1[31:0]
+non_fwd_tb.reg2[31:0]
+non_fwd_tb.reg3[31:0]
+non_fwd_tb.reg4[31:0]
+non_fwd_tb.reg5[31:0]
+non_fwd_tb.reg6[31:0]
+non_fwd_tb.reg7[31:0]
+non_fwd_tb.reg8[31:0]
+non_fwd_tb.reg9[31:0]
+non_fwd_tb.reg10[31:0]
+non_fwd_tb.reg11[31:0]
+non_fwd_tb.reg12[31:0]
+non_fwd_tb.reg13[31:0]
+non_fwd_tb.reg14[31:0]
+non_fwd_tb.reg15[31:0]
+non_fwd_tb.reg16[31:0]
+non_fwd_tb.reg17[31:0]
+non_fwd_tb.reg18[31:0]
+non_fwd_tb.reg19[31:0]
+non_fwd_tb.reg20[31:0]
+non_fwd_tb.reg21[31:0]
+non_fwd_tb.reg22[31:0]
+non_fwd_tb.reg23[31:0]
+non_fwd_tb.reg24[31:0]
+non_fwd_tb.reg25[31:0]
+non_fwd_tb.reg26[31:0]
+non_fwd_tb.reg27[31:0]
+non_fwd_tb.reg28[31:0]
+non_fwd_tb.reg29[31:0]
+non_fwd_tb.reg30[31:0]
+non_fwd_tb.reg31[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

@@ -6,7 +6,7 @@ module wrapper (
     output logic [8:0]  LEDG,  // Output for driving green LEDs
     output logic [6:0]  HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7,   // Output for driving 7-segment LED displays
 	 output logic [0:0]  SRAM_WE_N,SRAM_UB_N,SRAM_LB_N,SRAM_CE_N,
-	 input  logic        SRAM_OE_N,
+	 output  logic        SRAM_OE_N,
 	 output logic [17:0] SRAM_ADDR,
 	 inout wire   [15:0] SRAM_DQ,
     output logic [12:0] LCD    // Output for driving the LCD register
@@ -50,9 +50,9 @@ always @(posedge clk_div or negedge SW[17]) begin
 end
 
 
-singlecycle singlecycle_inst (
+non_fwd_sram non_fwd_sram_inst (
         .i_clk(clk_div),                // Connect clock input
-        .i_rst_n(Q2),                   // Connect reset input
+        .i_rstn(Q2),                   // Connect reset input
         .i_io_sw({{15{1'd0}},SW[16:0]}),// Connect switches input
         .i_io_btn(KEY),                 // Connect buttons input
         .o_pc_debug(),                  // Connect program counter output to pc_debug signal

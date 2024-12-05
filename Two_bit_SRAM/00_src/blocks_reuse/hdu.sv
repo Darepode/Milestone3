@@ -26,7 +26,7 @@ module hdu (
             IDEX_wren   = 1'b1;  
             EXMEM_wren  = 1'b1;  
             MEMWB_wren  = 1'b1;      
-        end else if((IDEX_mem_rden && IDEX_rdwren && (IDEX_rd == IFID_rs1 || IDEX_rd == IFID_rs2))) begin
+        end else if((IDEX_mem_rden && (IDEX_rd != 5'b00_000) && IDEX_rdwren && (IDEX_rd == IFID_rs1 || IDEX_rd == IFID_rs2))) begin
                         pc_wren    = 1'b0;
                         IFID_wren  = 1'b0;
                         IDEX_clear = 1'b1;

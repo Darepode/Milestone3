@@ -1,0 +1,32 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Thu Dec  5 03:08:46 2024
+[*]
+[dumpfile] "/home/datpham/CTMT/Milestone3/Non-Forwarding/10_sim/non_fwd_tb.vcd"
+[dumpfile_mtime] "Thu Dec  5 02:33:05 2024"
+[dumpfile_size] 16880802
+[savefile] "/home/datpham/CTMT/Milestone3/Non-Forwarding/10_sim/reset_butt.gtkw"
+[timestart] 26300000
+[size] 1920 985
+[pos] -1 -1
+*-24.901512 115400000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] non_fwd_tb.
+[treeopen] non_fwd_tb.non_fwd_inst.
+[sst_width] 297
+[signals_width] 142
+[sst_expanded] 1
+[sst_vpaned_height] 292
+@28
+non_fwd_tb.i_clk
+non_fwd_tb.i_rst_n
+@29
+non_fwd_tb.i_io_btn[3:0]
+@22
+non_fwd_tb.reg1[31:0]
+non_fwd_tb.reg2[31:0]
+non_fwd_tb.non_fwd_inst.IF_pc[31:0]
+non_fwd_tb.o_io_hex0[6:0]
+non_fwd_tb.o_io_hex1[6:0]
+non_fwd_tb.o_io_hex2[6:0]
+[pattern_trace] 1
+[pattern_trace] 0
