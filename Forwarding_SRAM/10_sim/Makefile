@@ -1,6 +1,6 @@
 .PHONY: comp sim wave run
 
-TEST_NAME=application
+TEST_NAME=app_no_delay
 BENCH=fwd_SRAM
 
 comp:

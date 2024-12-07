@@ -253,6 +253,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 IDEX_btb_hit  <= 1'b0;
             end
             else begin
+                if(IDEXreg_wren) begin
                 //Control signals
                 IDEX_insn_vld <= ID_insn_vld;
                 IDEX_is_br    <= ID_is_br;
@@ -276,6 +277,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 IDEX_rs1      <= IFID_rs1;
                 IDEX_rs2      <= IFID_rs2;
                 IDEX_btb_hit  <= IFID_btb_hit;
+                end
                 
             end
         end        
@@ -357,6 +359,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 EXMEM_pcplus4  <= 32'h0000_0000;
             end
             else begin
+                if(EXMEMreg_wren) begin
                 //Control signals
                 EXMEM_insn_vld <= IDEX_insn_vld;
                 EXMEM_is_br    <= IDEX_is_br;
@@ -376,6 +379,7 @@ always @(posedge i_clk or negedge i_rstn) begin
                 EXMEM_btb_hit  <= IDEX_btb_hit;
                 EXMEM_pc       <= IDEX_pc;
                 EXMEM_pcplus4  <= IDEX_pcplus4;
+                end
             end
         end        
 end
@@ -429,6 +433,7 @@ always @(posedge i_clk or negedge i_rstn) begin
             MEMWB_rd        <= 5'b0_0000;
         end
         else begin
+            if(MEMWBreg_wren) begin
             //Control signals
             MEMWB_insn_vld <= EXMEM_insn_vld;
             MEMWB_rd_wren  <= EXMEM_rd_wren;
@@ -438,6 +443,7 @@ always @(posedge i_clk or negedge i_rstn) begin
             MEMWB_alu_data  <= EXMEM_alu_data;
             MEMWB_lsu_rdata <= MEM_lsu_rdata;
             MEMWB_rd        <= EXMEM_rd;
+            end
         end
 end
 

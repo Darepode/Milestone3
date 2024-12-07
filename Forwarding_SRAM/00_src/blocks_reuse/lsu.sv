@@ -99,7 +99,7 @@ module lsu (
             3'b001:  ld_temp_data = data_mem_out;
             3'b010:  ld_temp_data = output_mem_out;
             3'b100:  ld_temp_data = input_mem_out;
-            default: ld_temp_data = 32'h0000_0000;
+            default: ld_temp_data = data_mem_out;
         endcase
     end
 
@@ -112,7 +112,7 @@ module lsu (
                 3'b000:  o_ld_data = {{24{ld_temp_data[7]}}, ld_temp_data[7:0]};
                 3'b001:  o_ld_data = {{16{ld_temp_data[15]}}, ld_temp_data[15:0]};
                 3'b010:  o_ld_data = ld_temp_data; 
-                default: o_ld_data = 32'b0011001100110011; //debugging
+                default: o_ld_data = 32'hF0F0_5555; //debugging
             endcase
     end
 
@@ -152,7 +152,7 @@ module lsu (
                 //Store byte
                 else if (i_s_length == 2'b00) output_mem[output_mem_addr] <= i_st_data[7:0];
                 //Other cases
-                else output_mem[output_mem_addr] <= output_mem[output_mem_addr];
+                //else output_mem[output_mem_addr] <= output_mem[output_mem_addr];
             end
         end
     end

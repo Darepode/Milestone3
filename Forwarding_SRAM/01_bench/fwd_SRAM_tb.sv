@@ -20,6 +20,14 @@ module fwd_SRAM_tb ();
     logic [6:0]  o_io_hex7;
     logic [31:0] o_io_lcd;
 
+    logic i_sram_oe_n;           // SRAM Output Enable (Active low)
+    logic [17:0] o_sram_addr;    // SRAM Address bus (18-bits)
+    wire [15:0] io_sram_dq;     // SRAM Data bus (16-bits)
+    logic o_sram_ce_n;           // SRAM Chip Enable (Active low)
+    logic o_sram_we_n;           // SRAM Write Enable (Active low)
+    logic o_sram_lb_n;           // SRAM Lower Byte Enable (Active low)
+    logic o_sram_ub_o;           // SRAM Upper Byte Enable (Active low)
+
     logic [31:0] reg0;
     logic [31:0] reg1;
     logic [31:0] reg2;
@@ -54,6 +62,10 @@ module fwd_SRAM_tb ();
     logic [31:0] reg31;
 
     logic [6:0] type_instr;
+
+    // logic [31:0] mem_read;
+
+    // assign mem_read = fwd_SRAM_inst;
 
     assign reg0  = fwd_SRAM_inst.inst_regfile.register[0];
     assign reg1  = fwd_SRAM_inst.inst_regfile.register[1];
@@ -108,8 +120,29 @@ fwd_SRAM fwd_SRAM_inst (
     .o_io_hex5  (o_io_hex5),
     .o_io_hex6  (o_io_hex6),
     .o_io_hex7  (o_io_hex7),
-    .o_io_lcd   (o_io_lcd)
+    .o_io_lcd   (o_io_lcd),
+
+    .i_sram_oe_n      (i_sram_oe_n),
+    .o_sram_addr      (o_sram_addr),
+    .io_sram_dq       (io_sram_dq),
+    .o_sram_ce_n      (o_sram_ce_n),
+    .o_sram_we_n      (o_sram_we_n),
+    .o_sram_lb_n      (o_sram_lb_n),
+    .o_sram_ub_o      (o_sram_ub_o) 
 );
+
+// Instantiate the simulated SRAM
+ SRAM_model sram_inst (
+        .clk(i_clk),                // Clock signal
+        .reset_n(i_rst_n),        // Active-low reset signal
+        .i_sram_addr(o_sram_addr), // Address input
+        .o_sram_oe_n(i_sram_oe_n), // Output enable (active-low)
+        .i_sram_we_n(o_sram_we_n), // Write enable (active-low)
+        .i_sram_ce_n(o_sram_ce_n), // Chip enable (active-low)
+        .i_sram_lb_n(o_sram_lb_n), // Lower byte enable (active-low)
+        .i_sram_ub_n(o_sram_ub_o), // Upper byte enable (active-low)
+        .io_sram_dq(io_sram_dq)   // Bidirectional data bus
+    );
 
     // Clock gen
     initial begin
@@ -148,10 +181,39 @@ fwd_SRAM fwd_SRAM_inst (
     //     end
     // end
 
-    // initial begin
-    //     #100
-    //     $finish();
-    // end 
+    initial begin
+        force i_io_btn = 4'b1111;
+        // Press to start
+        #25000
+        force i_io_btn = 4'b0111;
+        #10000
+        force i_io_btn = 4'b1111;
+        // Started
+
+        // Press to stop
+        #10000
+        force i_io_btn = 4'b0111;
+        #10000
+        force i_io_btn = 4'b1111;
+        // Stopped
+
+        // Press reset
+        #10000
+        force i_io_btn = 4'b1101;
+        #10000
+        force i_io_btn = 4'b1111;
+        // Resetted
+
+        // Press run
+        #10000
+        force i_io_btn = 4'b0111;
+        #10000
+        force i_io_btn = 4'b1111;
+        // Ran
+
+        #100000
+        $finish();
+    end 
 
     // Wave dump
     initial begin
