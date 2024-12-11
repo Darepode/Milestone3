@@ -415,7 +415,7 @@ run:
     jalr x0, x14, 0
 #------------------------------------------------------------------------------------------
 reset:
-    li   x2, 0x2100
+    li   x2, 0x2000
     sw   x1, 0(x2)
 P_WAIT2: 
     lb   x11, 0(x8)         # Load the value at the address 0x8810 (button status) into x11
@@ -506,9 +506,10 @@ R_WAIT2:
     li x29, 48
     li x31, 1  # Cursor flag
 
-    li   x2, 0x2100
+    li   x2, 0x2000
     lw   x1, 0(x2)
     li   x2, 0x7020
+
     jalr x0, x1, 0
 #------------------------------------------------------------------------------------------
 # Function: seven_seg_decode (exclude x10, x5, x6)
