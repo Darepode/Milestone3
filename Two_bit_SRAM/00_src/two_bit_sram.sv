@@ -74,6 +74,9 @@ localparam INDEX_WIDTH = 12;
     logic [4:0]  MEMWB_rd;
     logic [31:0] WB_rd_data;
 
+    /*PC debug*/
+    logic [31:0] MEMWB_pc;
+
 /*==============================   HDU SIGNALS   ==============================*/
     logic pc_wren, IFIDreg_clr, IDEXreg_clr, EXMEMreg_clr;
     logic IFIDreg_wren, IDEXreg_wren, EXMEMreg_wren, MEMWBreg_wren;
@@ -442,6 +445,9 @@ always @(posedge i_clk or negedge i_rstn) begin
             MEMWB_alu_data  <= 32'h0000_0000;
             MEMWB_lsu_rdata <= 32'h0000_0000;
             MEMWB_rd        <= 5'b0_0000;
+
+            //PC debug
+            MEMWB_pc        <= 32'h0000_0000;
         end
         else begin
             if (MEMWBreg_wren) begin
@@ -454,6 +460,9 @@ always @(posedge i_clk or negedge i_rstn) begin
                 MEMWB_alu_data  <= EXMEM_alu_data;
                 MEMWB_lsu_rdata <= MEM_lsu_rdata;
                 MEMWB_rd        <= EXMEM_rd;
+
+                //PC debug
+                MEMWB_pc        <= EXMEM_pc;
             end
         end
 end
@@ -486,6 +495,8 @@ ctrl_fsm ctrl_fsm_inst (
 /*==============================   WB STAGE   ==============================*/
 assign WB_rd_data = (!MEMWB_wb_sel) ? MEMWB_alu_data : MEMWB_lsu_rdata;
 assign o_insn_vld = MEMWB_insn_vld;
+
+assign o_pc_debug = MEMWB_pc;
 
 /*==============================      HDU     ==============================*/
 hdu inst_hdu (

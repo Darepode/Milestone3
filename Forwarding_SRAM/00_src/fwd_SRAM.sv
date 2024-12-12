@@ -59,6 +59,9 @@ module fwd_SRAM (
     logic [4:0]  EXMEM_rd;
     logic [31:0] MEM_lsu_rdata;
 
+    /*PC debug*/
+    logic [31:0] EXMEM_pc;
+
 /*==============================   WB SIGNALS   ==============================*/
     /* Control signal */
     logic MEMWB_insn_vld, MEMWB_rd_wren, MEMWB_wb_sel;
@@ -67,6 +70,9 @@ module fwd_SRAM (
     logic [31:0] MEMWB_lsu_rdata, MEMWB_alu_data;
     logic [4:0]  MEMWB_rd;
     logic [31:0] WB_rd_data;
+
+    /*PC debug*/
+    logic [31:0] MEMWB_pc;
 
 /*==============================   HDU SIGNALS   ==============================*/
     logic pc_wren, IFIDreg_clr, IDEXreg_clr, EXMEMreg_clr;
@@ -297,6 +303,9 @@ always @(posedge i_clk or negedge i_rstn) begin
             EXMEM_pcsel    <= 1'b0;
             EXMEM_func3    <= 3'b000;
             EXMEM_rd       <= 5'b0_0000;
+
+            //PC debug
+            EXMEM_pc       <= 32'h0000_0000;
         end
         else begin
             if (EXMEMreg_clr) begin
@@ -316,6 +325,9 @@ always @(posedge i_clk or negedge i_rstn) begin
                 EXMEM_pcsel    <= 1'b0;
                 EXMEM_func3    <= 3'b000;
                 EXMEM_rd       <= 5'b0_0000;
+
+                //PC debug
+                EXMEM_pc       <= 32'h0000_0000;
             end
             else begin
                 if(EXMEMreg_wren) begin
@@ -335,6 +347,9 @@ always @(posedge i_clk or negedge i_rstn) begin
                 EXMEM_pcsel    <= EX_pcsel;
                 EXMEM_func3    <= IDEX_func3;
                 EXMEM_rd       <= IDEX_rd;
+
+                //PC debug
+                EXMEM_pc       <= IDEX_pc;
                 end
             end
         end        
@@ -387,6 +402,9 @@ always @(posedge i_clk or negedge i_rstn) begin
             MEMWB_alu_data  <= 32'h0000_0000;
             MEMWB_lsu_rdata <= 32'h0000_0000;
             MEMWB_rd        <= 5'b0_0000;
+
+            //PC debug
+            MEMWB_pc        <= 32'h0000_0000;
         end
         else begin
             if (MEMWBreg_wren) begin
@@ -399,6 +417,9 @@ always @(posedge i_clk or negedge i_rstn) begin
             MEMWB_alu_data  <= EXMEM_alu_data;
             MEMWB_lsu_rdata <= MEM_lsu_rdata;
             MEMWB_rd        <= EXMEM_rd;
+
+            //PC debug
+            MEMWB_pc        <= EXMEM_pc;
             end
         end
 end
@@ -430,6 +451,9 @@ ctrl_fsm ctrl_fsm_inst (
 /*==============================   WB STAGE   ==============================*/
 assign WB_rd_data = (!MEMWB_wb_sel) ? MEMWB_alu_data : MEMWB_lsu_rdata;
 assign o_insn_vld = MEMWB_insn_vld;
+
+//PC debug
+assign o_pc_debug = MEMWB_pc;
 
 /*==============================      HDU     ==============================*/
 hdu inst_hdu (
