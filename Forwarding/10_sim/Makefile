@@ -1,6 +1,6 @@
 .PHONY: comp sim wave run
 
-TEST_NAME=application
+TEST_NAME=fibonacci
 BENCH=fwd
 
 comp:
@@ -21,8 +21,10 @@ hex:
 run:
 	make hex && make comp && make sim
 
-test:
+test_hex:
 	riscv32-unknown-elf-as -o ../02_test/test_assembly.o ../02_test/$(TEST_NAME).asm &&\
 	riscv32-unknown-elf-objcopy -O verilog ../02_test/test_assembly.o ../02_test/dump/mem.dump &&\
-	riscv32-unknown-elf-objdump -d ../02_test/test_assembly.o > ../02_test/output.asm &&\
+	riscv32-unknown-elf-objdump -d ../02_test/test_assembly.o > ../02_test/output.asm
+	
+test:
 	make comp && make sim

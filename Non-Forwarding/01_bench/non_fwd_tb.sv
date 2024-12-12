@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+
 module non_fwd_tb ();
 
     logic        i_clk;
@@ -110,7 +111,10 @@ non_fwd non_fwd_inst (
     .o_io_hex7  (o_io_hex7),
     .o_io_lcd   (o_io_lcd)
 );
+logic is_branch, is_jump;
 
+assign is_branch = non_fwd_inst.EXMEM_is_br;
+assign is_jump   = non_fwd_inst.EXMEM_is_uncbr[1];
     // Clock gen
     initial begin
         i_clk = 0;
@@ -123,35 +127,60 @@ non_fwd non_fwd_inst (
         #10 i_rst_n = 1;
     end
 
-    integer nop_count;
+    // initial begin
+    //     wait(i_rst_n) 
+    //         // for(int i = 0; i<100; i++) begin
+    //          @(posedge i_clk);
+    //         //  $display("Instr mem %8h",non_fwd_inst.imem_inst.instr_mem[i]);
+    //          $display("IF mem %8h",non_fwd_inst.IF_instr);
+    //     // end
+        
+    // end
+
+    integer instr_cnt;
+    integer cycle;
+    integer br_cnt;
+    integer br_miss_cnt, br_correct_cnt;
     initial begin
-        nop_count = 0;
+        instr_cnt = 0;
+        cycle = 0;
+        br_cnt = 0;
+        br_miss_cnt = 0;
+        br_correct_cnt = 0;
+        wait (i_rst_n) begin
         forever begin
         @(posedge i_clk);
-        if(o_insn_vld == 0) nop_count++;
+        cycle++;
+        if(o_insn_vld == 1) instr_cnt++;
+        if(is_branch || is_jump) begin
+            br_cnt++;
+        if(non_fwd_inst.EXMEM_pcsel) br_miss_cnt++;
+        else br_correct_cnt++;
+        end
+        end
         end
     end
 
     initial begin
-        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
-        #25000
-        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b0111;
+    //     force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
+    //     #25000
+    //     force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b0111;
+    //     #10000
+    //     force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
+    //     #50000
+
+
+    //     force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b0111;
+    //     #10000
+    //     force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
+    //     #50000
+
+
+    //     force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1101;
+    //     #10000
+    //     force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
+
         #10000
-        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
-        #50000
-
-
-        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b0111;
-        #10000
-        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
-        #50000
-
-
-        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1101;
-        #10000
-        force non_fwd_tb.non_fwd_inst.i_io_btn = 4'b1111;
-
-        #100000
         $finish();
     end 
 
@@ -175,12 +204,16 @@ non_fwd non_fwd_inst (
     initial begin
         $dumpfile("non_fwd_tb.vcd");
         $dumpvars(0,non_fwd_tb);
-        wait(non_fwd_inst.IF_instr == 32'h0000006f) begin
+        wait(non_fwd_inst.IF_instr == 32'h11111111) begin
            $writememh("Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.data_mem);
            $writememh("Out_Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.output_mem);
            $writememh("In_Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.input_mem);
-           $display("Number of NOP of the applications is %0d", nop_count);
-           repeat(4) @(posedge i_clk);
+           $display("Number of instruction of the applications is %0d", instr_cnt);
+           $display("Number of cycles: %0d", cycle);
+           $display("Number of branch instruction: %0d", br_cnt);
+           $display("Number of miss: %0d", br_miss_cnt);
+           $display("Number of correct: %0d", br_correct_cnt);
+
            $finish(); 
            end
     end

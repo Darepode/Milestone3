@@ -123,25 +123,30 @@ fwd fwd_inst (
         #10 i_rst_n = 1;
     end
 
-    integer nop_count;
+    integer instr_cnt;
+    integer cycle;
     initial begin
-        nop_count = 0;
+        instr_cnt = 0;
+        cycle = 0;
+        wait (i_rst_n) begin
         forever begin
         @(posedge i_clk);
-        if(o_insn_vld == 0) nop_count++;
+        cycle++;
+        if(o_insn_vld == 1) instr_cnt++;
+        end
         end
     end
 
     // // Wave dump
     // initial begin
-    //     $dumpfile("non_fwd_tb.vcd");
-    //     $dumpvars(0,non_fwd_tb);
+    //     $dumpfile("fwd_tb.vcd");
+    //     $dumpvars(0,fwd_tb);
     //     #100000 begin
-    //        $writememh("Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.data_mem);
-    //        $writememh("Out_Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.output_mem);
-    //        $writememh("In_Mem_after.data", non_fwd_tb.non_fwd_inst.inst_lsu.input_mem);
+    //        $writememh("Mem_after.data", fwd_tb.fwd_inst.inst_lsu.data_mem);
+    //        $writememh("Out_Mem_after.data", fwd_tb.fwd_inst.inst_lsu.output_mem);
+    //        $writememh("In_Mem_after.data", fwd_tb.fwd_inst.inst_lsu.input_mem);
     //        $display("Number of NOP of the applications is %0d", nop_count);
-    //        if(non_fwd_inst.IF_instr == 32'h0000006f) begin
+    //        if(fwd_inst.IF_instr == 32'h0000006f) begin
     //        repeat(4) @(posedge i_clk);
     //        $finish(); 
     //        end
@@ -157,12 +162,13 @@ fwd fwd_inst (
     initial begin
         $dumpfile("fwd_tb.vcd");
         $dumpvars(0,fwd_tb);
-        wait(fwd_inst.IF_instr == 32'h0000006f) begin
+        wait(fwd_inst.IF_instr == 32'h11111111) begin
            $writememh("Mem_after.data", fwd_tb.fwd_inst.inst_lsu.data_mem);
            $writememh("Out_Mem_after.data", fwd_tb.fwd_inst.inst_lsu.output_mem);
            $writememh("In_Mem_after.data", fwd_tb.fwd_inst.inst_lsu.input_mem);
-           $display("Number of NOP of the applications is %0d", nop_count);
-           repeat(4) @(posedge i_clk);
+           $display("Number of instruction of the applications is %0d", instr_cnt);
+           $display("Number of cycles: %0d", cycle);
+
            $finish(); 
            end
     end
