@@ -6,7 +6,7 @@ module wrapper (
     output logic [8:0]  LEDG,  // Output for driving green LEDs
     output logic [6:0]  HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7,   // Output for driving 7-segment LED displays
 	 output logic [0:0]  SRAM_WE_N,SRAM_UB_N,SRAM_LB_N,SRAM_CE_N,
-	 input  logic        SRAM_OE_N,
+	 output  logic        SRAM_OE_N,
 	 output logic [17:0] SRAM_ADDR,
 	 inout wire   [15:0] SRAM_DQ,
     output logic [12:0] LCD    // Output for driving the LCD register

@@ -11,7 +11,7 @@ module two_bit_sram (
     output logic [31:0] o_io_lcd,    // Output for driving the LCD register
 	 
 	//output to SRAM
-	input  logic        i_sram_oe_n,
+	output  logic        i_sram_oe_n,
 	output logic [17:0] o_sram_addr,
 	inout  wire  [15:0] io_sram_dq,
 	output logic        o_sram_ce_n, o_sram_we_n,
